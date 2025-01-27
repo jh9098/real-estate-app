@@ -22,8 +22,8 @@
     };
 
     // Firebase 초기화
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
     
   </script>
 </head>
