@@ -57,3 +57,30 @@
     </footer>
 </body>
 </html>
+
+
+
+<script>
+    // JSON 데이터 불러오기
+    fetch('data.json')
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+  
+        // 매물 목록 출력
+        const 매물목록 = document.getElementById('매물목록');
+        data.매물.forEach((item) => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${item.종류} - ${item.가격}만원 - ${item.지역}`;
+          매물목록.appendChild(listItem);
+        });
+      })
+      .catch((error) => console.error('Error:', error));
+  </script>
+  
+
+  <section>
+    <h2>매물 목록</h2>
+    <ul id="매물목록"></ul>
+  </section>
+  
