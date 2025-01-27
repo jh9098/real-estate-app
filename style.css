@@ -1,67 +1,64 @@
-/* 기본 스타일 */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f9f9f9;
     color: #333;
-}
-
-header {
+  }
+  
+  header {
     background-color: #4CAF50;
     color: white;
     text-align: center;
     padding: 1rem 0;
-}
-
-header h1 {
+  }
+  
+  h1 {
     margin: 0;
-}
-
-main {
+  }
+  
+  main {
     padding: 1rem;
-}
-
-section {
+  }
+  
+  section {
     margin-bottom: 2rem;
     padding: 1rem;
-    background-color: #ffffff;
+    background-color: white;
     border: 1px solid #ddd;
     border-radius: 5px;
-}
-
-form label {
+  }
+  
+  form label {
     font-weight: bold;
-}
-
-form input, form select, form button {
+  }
+  
+  form input, form button {
     margin-top: 0.5rem;
     display: block;
     width: 100%;
     max-width: 400px;
     padding: 0.5rem;
     font-size: 1rem;
-}
-
-button {
+  }
+  
+  button {
     background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 5px;
     padding: 0.75rem;
     cursor: pointer;
-}
-
-button:hover {
+  }
+  
+  button:hover {
     background-color: #45a049;
-}
-
-footer {
+  }
+  
+  footer {
     text-align: center;
     padding: 1rem;
     background-color: #333;
     color: white;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
-}
+  }
+  

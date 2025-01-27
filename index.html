@@ -1,200 +1,146 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>내 부동산 어플</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('Service Worker Registered'));
-    }
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부동산 PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+  <script>
+    // Firebase 설정
+    const firebaseConfig = {
+        apiKey: "AIzaSyBX12y9KG-qBDQXTQeVxaGKjDQc_ztdWYs",
+        authDomain: "real-estate-app-7a001.firebaseapp.com",
+        databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "real-estate-app-7a001",
+        storageBucket: "real-estate-app-7a001.firebasestorage.app",
+        messagingSenderId: "229808061189",
+        appId: "1:229808061189:web:fa0835141b468b44e3556c",
+        measurementId: "G-T2X411LZ57"
+    };
 
+    // Firebase 초기화
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+  </script>
 </head>
 <body>
-    <header>
-        <h1>내 부동산 어플</h1>
-        <p>매수자와 매도자를 연결하는 새로운 플랫폼</p>
-    </header>
+  <header>
+    <h1>부동산 매물 및 매수자 등록 PWA</h1>
+  </header>
+  <main>
+    <!-- 매물 등록 -->
+    <section>
+      <h2>매물 등록</h2>
+      <form id="매물등록폼">
+        <label for="종류">종류:</label>
+        <input type="text" id="종류" placeholder="예: 아파트">
+        <label for="가격">가격 (만원):</label>
+        <input type="number" id="가격" placeholder="예: 50000">
+        <label for="주소">주소:</label>
+        <input type="text" id="주소" placeholder="예: 서울시 종로구 새문안로 68">
+        <button type="submit">등록</button>
+      </form>
+    </section>
 
-    <main>
-        <section>
-            <h2>매물 등록</h2>
-            <form id="매물등록폼">
-              <label for="매물종류">종류:</label>
-              <input type="text" id="매물종류" placeholder="예: 아파트">
-              
-              <label for="매물가격">가격 (만원):</label>
-              <input type="number" id="매물가격" placeholder="예: 50000">
-          
-              <label for="도로명주소">도로명 주소:</label>
-              <input type="text" id="도로명주소" placeholder="예: 서울시 종로구 새문안로 68">
-          
-              <label for="동호수">동/호수:</label>
-              <input type="text" id="동호수" placeholder="예: 101동 401호">
-          
-              <label for="면적">공급면적/전용면적 (㎡):</label>
-              <input type="text" id="면적" placeholder="예: 104 / 84">
-          
-              <button type="submit">등록</button>
-            </form>
-          </section>
-          
+    <!-- 매수자 요청 등록 -->
+    <section>
+      <h2>매수자 요청 등록</h2>
+      <form id="매수자등록폼">
+        <label for="희망종류">희망 종류:</label>
+        <input type="text" id="희망종류" placeholder="예: 아파트">
+        <label for="최대가격">최대 가격 (만원):</label>
+        <input type="number" id="최대가격" placeholder="예: 60000">
+        <label for="희망주소">희망 주소:</label>
+        <input type="text" id="희망주소" placeholder="예: 서울시 강남구 테헤란로 456">
+        <button type="submit">등록</button>
+      </form>
+    </section>
 
-          <section>
-            <h2>매수자 요청 등록</h2>
-            <form id="매수자등록폼">
-              <label for="희망종류">희망 종류:</label>
-              <input type="text" id="희망종류" placeholder="예: 아파트">
-          
-              <label for="최대가격">최대 가격 (만원):</label>
-              <input type="number" id="최대가격" placeholder="예: 60000">
-          
-              <label for="희망도로명주소">희망 도로명 주소:</label>
-              <input type="text" id="희망도로명주소" placeholder="예: 서울시 종로구 새문안로 68">
-          
-              <label for="희망동호수">희망 동/호수:</label>
-              <input type="text" id="희망동호수" placeholder="예: 101동 401호">
-          
-              <label for="희망면적">희망 공급면적/전용면적 (㎡):</label>
-              <input type="text" id="희망면적" placeholder="예: 104 / 84">
-          
-              <button type="submit">등록</button>
-            </form>
-          </section>
-          
-    </main>
+    <!-- 등록된 매물 -->
+    <section>
+      <h2>등록된 매물</h2>
+      <ul id="매물목록"></ul>
+    </section>
 
-    <footer>
-        <p>© 2025 내 부동산 어플</p>
-    </footer>
-</body>
-</html>
+    <!-- 등록된 매수자 -->
+    <section>
+      <h2>등록된 매수자</h2>
+      <ul id="매수자목록"></ul>
+    </section>
+  </main>
+  <footer>
+    <p>© 2025 부동산 PWA</p>
+  </footer>
+  <script>
+    // 매물 등록
+    document.getElementById('매물등록폼').addEventListener('submit', (e) => {
+      e.preventDefault();
 
+      const 종류 = document.getElementById('종류').value;
+      const 가격 = parseInt(document.getElementById('가격').value, 10);
+      const 주소 = document.getElementById('주소').value;
 
+      const 매물Ref = db.ref('매물');
+      매물Ref.push({ 종류, 가격, 주소 })
+        .then(() => {
+          alert('매물이 성공적으로 등록되었습니다!');
+          document.getElementById('매물등록폼').reset();
+        })
+        .catch((error) => console.error('데이터 저장 오류:', error));
+    });
 
-  
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
-
-<script>
-  // Firebase 초기화
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-
-  // Firebase 앱 초기화
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  // 데이터베이스에 매물 데이터 추가
-  const 매물Ref = db.ref('매물');
-  매물Ref.set([
-    { id: 1, 종류: '아파트', 가격: 50000, 지역: '서울 강남구' },
-    { id: 2, 종류: '빌라', 가격: 30000, 지역: '서울 서초구' }
-  ]);
-</script>
-
-
-<script>
-    // Firebase에서 데이터 읽기
+    // 매물 데이터 읽기
+    const 매물Ref = db.ref('매물');
     매물Ref.on('value', (snapshot) => {
       const data = snapshot.val();
       const 매물목록 = document.getElementById('매물목록');
       매물목록.innerHTML = ''; // 기존 목록 초기화
-      data.forEach((item) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${item.종류} - ${item.가격}만원 - ${item.지역}`;
-        매물목록.appendChild(listItem);
-      });
-    });
-  </script>
-  
 
-  <section>
-    <h2>매물 검색</h2>
-    <form id="검색폼">
-      <label for="검색지역">지역:</label>
-      <input type="text" id="검색지역" placeholder="예: 서울 강남구">
-      <label for="최대가격">최대 가격 (만원):</label>
-      <input type="number" id="최대가격" placeholder="예: 50000">
-      <button type="submit">검색</button>
-    </form>
-    <ul id="검색결과"></ul>
-  </section>
-  <script>
-    // 매물 등록 폼 이벤트 처리
-    document.getElementById('매물등록폼').addEventListener('submit', (e) => {
-      e.preventDefault();
-  
-      // 폼 데이터 가져오기
-      const 종류 = document.getElementById('매물종류').value;
-      const 가격 = parseInt(document.getElementById('매물가격').value, 10);
-      const 도로명주소 = document.getElementById('도로명주소').value;
-      const 동호수 = document.getElementById('동호수').value;
-      const 면적 = document.getElementById('면적').value;
-  
-      // Firebase Realtime Database에 데이터 저장
-      const 매물Ref = db.ref('매물');
-      매물Ref.push({
-        종류,
-        가격,
-        주소: {
-          도로명주소,
-          동호수,
-        },
-        면적
-      })
-        .then(() => {
-          alert('매물이 성공적으로 등록되었습니다!');
-          document.getElementById('매물등록폼').reset(); // 폼 초기화
-        })
-        .catch((error) => {
-          console.error('데이터 저장 중 오류 발생:', error);
+      if (data) {
+        Object.values(data).forEach((item) => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${item.종류} - ${item.가격}만원 - ${item.주소}`;
+          매물목록.appendChild(listItem);
         });
+      }
     });
-  </script>
-  <script>
-    // 매수자 요청 등록 폼 이벤트 처리
+
+    // 매수자 등록
     document.getElementById('매수자등록폼').addEventListener('submit', (e) => {
       e.preventDefault();
-  
-      // 폼 데이터 가져오기
+
       const 희망종류 = document.getElementById('희망종류').value;
       const 최대가격 = parseInt(document.getElementById('최대가격').value, 10);
-      const 희망도로명주소 = document.getElementById('희망도로명주소').value;
-      const 희망동호수 = document.getElementById('희망동호수').value;
-      const 희망면적 = document.getElementById('희망면적').value;
-  
-      // Firebase Realtime Database에 데이터 저장
+      const 희망주소 = document.getElementById('희망주소').value;
+
       const 매수자Ref = db.ref('매수자');
-      매수자Ref.push({
-        희망종류,
-        최대가격,
-        희망주소: {
-          도로명주소: 희망도로명주소,
-          동호수: 희망동호수,
-        },
-        희망면적
-      })
+      매수자Ref.push({ 희망종류, 최대가격, 희망주소 })
         .then(() => {
           alert('매수자 요청이 성공적으로 등록되었습니다!');
-          document.getElementById('매수자등록폼').reset(); // 폼 초기화
+          document.getElementById('매수자등록폼').reset();
         })
-        .catch((error) => {
-          console.error('데이터 저장 중 오류 발생:', error);
+        .catch((error) => console.error('데이터 저장 오류:', error));
+    });
+
+    // 매수자 데이터 읽기
+    const 매수자Ref = db.ref('매수자');
+    매수자Ref.on('value', (snapshot) => {
+      const data = snapshot.val();
+      const 매수자목록 = document.getElementById('매수자목록');
+      매수자목록.innerHTML = ''; // 기존 목록 초기화
+
+      if (data) {
+        Object.values(data).forEach((item) => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${item.희망종류} - 최대 ${item.최대가격}만원 - ${item.희망주소}`;
+          매수자목록.appendChild(listItem);
         });
+      }
     });
   </script>
-  
-  
-  
+</body>
+</html>
