@@ -6,10 +6,11 @@
   <title>부동산 PWA</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
-  <script>
+  <script type="module">
     // Firebase 설정
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+
     const firebaseConfig = {
         apiKey: "AIzaSyBX12y9KG-qBDQXTQeVxaGKjDQc_ztdWYs",
         authDomain: "real-estate-app-7a001.firebaseapp.com",
@@ -23,7 +24,7 @@
 
     // Firebase 초기화
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const db = getDatabase(app); // Firebase 데이터베이스 초기화
     
   </script>
 </head>
@@ -75,7 +76,7 @@
   <footer>
     <p>© 2025 부동산 PWA</p>
   </footer>
-  <script>
+  <script type="module">
     // 매물 등록
     document.getElementById('매물등록폼').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -84,8 +85,8 @@
       const 가격 = parseInt(document.getElementById('가격').value, 10);
       const 주소 = document.getElementById('주소').value;
 
-      const 매물Ref = db.ref('매물');
-      매물Ref.push({ 종류, 가격, 주소 })
+      const 매물Ref = ref(db, '매물');
+      push(매물Ref, { 종류, 가격, 주소 })
         .then(() => {
           alert('매물이 성공적으로 등록되었습니다!');
           document.getElementById('매물등록폼').reset();
@@ -94,8 +95,8 @@
     });
 
     // 매물 데이터 읽기
-    const 매물Ref = db.ref('매물');
-    매물Ref.on('value', (snapshot) => {
+    const 매물Ref = ref(db, '매물');
+    onValue(매물Ref, (snapshot) => {
       const data = snapshot.val();
       const 매물목록 = document.getElementById('매물목록');
       매물목록.innerHTML = ''; // 기존 목록 초기화
@@ -117,8 +118,8 @@
       const 최대가격 = parseInt(document.getElementById('최대가격').value, 10);
       const 희망주소 = document.getElementById('희망주소').value;
 
-      const 매수자Ref = db.ref('매수자');
-      매수자Ref.push({ 희망종류, 최대가격, 희망주소 })
+      const 매수자Ref = ref(db, '매수자');
+      push(매수자Ref, { 희망종류, 최대가격, 희망주소 })
         .then(() => {
           alert('매수자 요청이 성공적으로 등록되었습니다!');
           document.getElementById('매수자등록폼').reset();
@@ -127,8 +128,8 @@
     });
 
     // 매수자 데이터 읽기
-    const 매수자Ref = db.ref('매수자');
-    매수자Ref.on('value', (snapshot) => {
+    const 매수자Ref = ref(db, '매수자');
+    onValue(매수자Ref, (snapshot) => {
       const data = snapshot.val();
       const 매수자목록 = document.getElementById('매수자목록');
       매수자목록.innerHTML = ''; // 기존 목록 초기화
