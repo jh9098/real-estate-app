@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 부동산 어플</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker Registered'));
+    }
+</script>
+
+</head>
+<body>
+    <header>
+        <h1>내 부동산 어플</h1>
+        <p>매수자와 매도자를 연결하는 새로운 플랫폼</p>
+    </header>
+
+    <main>
+        <section id="매물등록">
+            <h2>매물 등록하기</h2>
+            <form>
+                <label for="매물종류">매물 종류:</label>
+                <select id="매물종류">
+                    <option value="아파트">아파트</option>
+                    <option value="빌라">빌라</option>
+                    <option value="주택">주택</option>
+                </select>
+                <br><br>
+                <label for="매물가격">가격 (만원):</label>
+                <input type="number" id="매물가격" placeholder="예: 50000">
+                <br><br>
+                <button type="submit">등록</button>
+            </form>
+        </section>
+
+        <section id="매수자등록">
+            <h2>매수자 요청 등록</h2>
+            <form>
+                <label for="지역">희망 지역:</label>
+                <input type="text" id="지역" placeholder="예: 서울 강남구">
+                <br><br>
+                <label for="최대가격">최대 가격 (만원):</label>
+                <input type="number" id="최대가격" placeholder="예: 70000">
+                <br><br>
+                <button type="submit">등록</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 내 부동산 어플</p>
+    </footer>
+</body>
+</html>
