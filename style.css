@@ -48,7 +48,8 @@ form {
   margin: 0 auto;
 }
 
-form input, form button {
+form input,
+form button {
   margin: 10px 0;
   padding: 10px;
   border: 1px solid #ccc;
@@ -68,4 +69,14 @@ form button:hover {
 #map {
   height: 400px;
   width: 100%;
+}
+
+/* 반응형 디자인 추가 (예시) */
+@media (max-width: 768px) {
+  #navbar {
+    flex-direction: column; /* 네비게이션 버튼들을 세로로 배치 */
+  }
+  #navbar button {
+    margin: 5px 0;
+  }
 }
