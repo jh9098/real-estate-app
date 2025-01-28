@@ -1,558 +1,276 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="ko">
 
- <html lang="ko"> 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부동산 PWA</title>
 
- <head> 
+  <!-- Naver Maps API Script -->
+  <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
 
-  <meta charset="UTF-8"> 
+  <style>
+    /* Basic styles */
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-  <title>부동산 PWA</title> 
+    #navbar {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+    }
 
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
 
+    button:hover {
+      background-color: #0056b3;
+    }
 
-  <!-- Naver Maps API Script (Place this above your custom JavaScript) --> 
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
 
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
 
-  <title>간단한 지도 표시하기</title>
-  <script type="text/javascript"
-      src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
-  </head>
-  <body>
-      <div id="map" style="width: 100%; height: 400px;"></div>
-  
-      <script>
-          // html5 geoLocation 객체 사용
-          function onGeolocationSuccess(position) {
-              // 좌표 출력 
-              console.log("lat: " + position.coords.latitude + ", lon: " + position.coords.longitude);
-              //Naver 지도 API
-              var mapOptions = {
-                  center : new naver.maps.LatLng(position.coords.latitude, position.coords.longitude),
-                  zoom : 20
-              };
-  
-              var map = new naver.maps.Map('map', mapOptions); // 실제 지도를 가져오기
-  
-              var marker = new naver.maps.Marker({
-                  position: new naver.maps.LatLng(position.coords.latitude, position.coords.longitude),
-                  map: map,
-                  icon: {
-                      url: '../img/marker.png',
-                      size: new naver.maps.Size(100, 100),
-                      origin: new naver.maps.Point(0, 0),
-                      anchor: new naver.maps.Point(50, 26)
-                  }
-  
-  
-              });
-  
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+  </style>
+
+</head>
+
+<body>
+  <header>
+    <h1>부동산 매물 및 매수자 등록</h1>
+  </header>
+
+  <div id="navbar">
+    <button id="homeBtn">🏠 홈</button>
+    <button id="mapBtn">🗺️ 지도</button>
+    <button id="sellBtn">🏢 매물등록</button>
+    <button id="buyBtn">🔍 매수등록</button>
+  </div>
+
+  <section id="homeSection">
+    <h2>최근 등록 매물</h2>
+    <div id="recentListings">
+      <!-- Recent listings will be populated here -->
+    </div>
+  </section>
+
+  <section id="sellSection" style="display: none;">
+    <h2>매물 등록</h2>
+    <form id="sellForm">
+      <label for="itemType">종류:</label>
+      <input type="text" id="itemType" placeholder="예: 아파트" required>
+
+      <label for="price">가격 (만원):</label>
+      <input type="number" id="price" placeholder="예: 50000" required>
+
+      <label for="address">주소:</label>
+      <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required>
+
+      <button type="submit">등록하기</button>
+    </form>
+  </section>
+
+  <section id="buySection" style="display: none;">
+    <h2>매수 등록</h2>
+
+    <form id="buyForm">
+      <label for="buyType">찾는 매물 종류:</label>
+      <input type="text" id="buyType" placeholder="예: 아파트" required>
+
+      <label for="maxPrice">희망 최대가격 (만원):</label>
+      <input type="number" id="maxPrice" placeholder="예: 50000" required>
+
+      <label for="buyAddress">희망 지역:</label>
+      <input type="text" id="buyAddress" placeholder="예: 서울시 종로구" required>
+
+      <button type="submit">등록하기</button>
+    </form>
+  </section>
+
+  <section id="mapSection" style="display: none;">
+    <div id="map"></div>
+    <div id="roadview" style="width: 100%; height: 400px;"></div> <!-- 로드뷰 추가 -->
+  </section>
+
+  <!-- Firebase SDK (Modular) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+      authDomain: "real-estate-app-7a001.firebaseapp.com",
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "real-estate-app-7a001",
+      storageBucket: "real-estate-app-7a001.appspot.com",
+      messagingSenderId: "229808061189",
+      appId: "1:229808061189:web:fa083511b468b44e3556c"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Section management
+    const sections = {
+      homeSection: document.getElementById('homeSection'),
+      sellSection: document.getElementById('sellSection'),
+      buySection: document.getElementById('buySection'),
+      mapSection: document.getElementById('mapSection')
+    };
+
+    function showSection(sectionId) {
+      Object.entries(sections).forEach(([id, element]) => {
+        element.style.display = id === sectionId ? 'block' : 'none';
+      });
+      if (sectionId === 'mapSection') {
+        initMap();
+        initRoadview(); // 지도 화면에서 로드뷰도 초기화
+      }
+    }
+
+    // Navigation
+    document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
+    document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
+    document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
+    document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
+
+    // Map initialization
+    let map = null;
+    function initMap() {
+      if (!map) {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
+          zoom: 12
+        });
+      }
+    }
+
+    // Roadview initialization
+    let roadview = null;
+    function initRoadview() {
+      if (!roadview) {
+        roadview = new naver.maps.Roadview(document.getElementById('roadview'));
+        const rvClient = new naver.maps.RoadviewClient();
+        const location = new naver.maps.LatLng(37.5665, 126.9780); // Seoul center for Roadview
+        roadview.setViewpoint(location);
+        rvClient.getNearestPanoId(location, function(panoId) {
+          if (panoId) {
+            roadview.setPanoId(panoId, location);
           }
-          function onGeolocationFail(error) {
-              // 에러 출력 
-              console.log("Error Code: " + error.code + ", Error Description: "
-                      + error.message);
-          }
-  
-          if (navigator.geolocation) { // 이 브라우저에서 geolocation을 지원하면(객체가 있으면)
-  
-              var positionOptions = {
-                  enableHighAccuracy : true, // 정확한 위치 사용 
-                  maximumAge : 0, // 캐시 사용 안함 
-                  timeout : 3000 // timeout 3초 (3000ms)동안 반응없으면 끝내기 
-              };
-              navigator.geolocation.getCurrentPosition( // 위, 경도를 얻어라 
-                      onGeolocationSuccess, // 성공시 function, 위에서 정의한 onGeolocationSuccess함수를 수행
-                      onGeolocationFail, // Error시 function
-                      positionOptions);  // 옵션(자바스크립트객체)
-          }
-  
-  
-      </script>
-
-  <style> 
-
-   /* Basic styles to get started */ 
-
-   body { 
-
-    margin: 0; 
-
-    padding: 20px; 
-
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; 
-
-   } 
-
-
-
-   header { 
-
-    text-align: center; 
-
-    margin-bottom: 20px; 
-
-   } 
-
-
-
-   #navbar { 
-
-    display: flex; 
-
-    justify-content: space-around; 
-
-    margin-bottom: 20px; 
-
-    padding: 10px; 
-
-    background-color: #f0f0f0; 
-
-   } 
-
-
-
-   button { 
-
-    padding: 10px 20px; 
-
-    border: none; 
-
-    border-radius: 5px; 
-
-    background-color: #007bff; 
-
-    color: white; 
-
-    cursor: pointer; 
-
-   } 
-
-
-
-   button:hover { 
-
-    background-color: #0056b3; 
-
-   } 
-
-
-
-   form { 
-
-    display: flex; 
-
-    flex-direction: column; 
-
-    gap: 10px; 
-
-    max-width: 500px; 
-
-    margin: 0 auto; 
-
-   } 
-
-
-
-   input { 
-
-    padding: 8px; 
-
-    border: 1px solid #ddd; 
-
-    border-radius: 4px; 
-
-   } 
-
-
-
-   #map { 
-
-    width: 100%; 
-
-    height: 400px; 
-
-    margin-top: 20px; 
-
-    border: 1px solid #ddd; 
-
-   } 
-
-
-
-   section { 
-
-    margin-bottom: 30px; 
-
-   } 
-
-  </style> 
-
- </head> 
-
- <body> 
-
-  <header> 
-
-   <h1>부동산 매물 및 매수자 등록</h1> 
-
-  </header> 
-
-
-
-  <div id="navbar"> 
-
-   <button id="homeBtn">🏠 홈</button> 
-
-   <button id="mapBtn">🗺️ 지도</button> 
-
-   <button id="sellBtn">🏢 매물등록</button> 
-
-   <button id="buyBtn">🔍 매수등록</button> 
-
-  </div> 
-
-
-
-  <section id="homeSection"> 
-
-   <h2>최근 등록 매물</h2> 
-
-   <div id="recentListings"> 
-
-    <!-- Recent listings will be populated here --> 
-
-   </div> 
-
-  </section> 
-
-
-
-  <section id="sellSection" style="display: none;"> 
-
-   <h2>매물 등록</h2> 
-
-   <form id="sellForm"> 
-
-    <label for="itemType">종류:</label> 
-
-    <input type="text" id="itemType" placeholder="예: 아파트" required> 
-
-     
-
-    <label for="price">가격 (만원):</label> 
-
-    <input type="number" id="price" placeholder="예: 50000" required> 
-
-     
-
-    <label for="address">주소:</label> 
-
-    <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required> 
-
-     
-
-    <button type="submit">등록하기</button> 
-
-   </form> 
-
-  </section> 
-
-
-
-  <section id="buySection" style="display: none;"> 
-
-   <h2>매수 등록</h2> 
-
-   <form id="buyForm"> 
-
-    <label for="buyType">찾는 매물 종류:</label> 
-
-    <input type="text" id="buyType" placeholder="예: 아파트" required> 
-
-     
-
-    <label for="maxPrice">희망 최대가격 (만원):</label> 
-
-    <input type="number" id="maxPrice" placeholder="예: 50000" required> 
-
-     
-
-    <label for="buyAddress">희망 지역:</label> 
-
-    <input type="text" id="buyAddress" placeholder="예: 서울시 종로구" required> 
-
-     
-
-    <button type="submit">등록하기</button> 
-
-   </form> 
-
-  </section> 
-
-
-
-  <section id="mapSection" style="display: none;"> 
-
-   <div id="map"></div> 
-
-  </section> 
-
-
-
-  <!-- Firebase SDK (Modular) --> 
-
-  <script type="module"> 
-
-   import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js'; 
-
-   import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js'; 
-
-
-
-   // Firebase Configuration 
-
-   const firebaseConfig = { 
-
-    apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs", 
-
-    authDomain: "real-estate-app-7a001.firebaseapp.com", 
-
-    databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app", 
-
-    projectId: "real-estate-app-7a001", 
-
-    storageBucket: "real-estate-app-7a001.appspot.com", 
-
-    messagingSenderId: "229808061189", 
-
-    appId: "1:229808061189:web:fa083511b468b44e3556c" 
-
-   }; 
-
-
-
-   // Initialize Firebase 
-
-   const app = initializeApp(firebaseConfig); 
-
-   const db = getDatabase(app); 
-
-
-
-   // Section management 
-
-   const sections = { 
-
-    homeSection: document.getElementById('homeSection'), 
-
-    sellSection: document.getElementById('sellSection'), 
-
-    buySection: document.getElementById('buySection'), 
-
-    mapSection: document.getElementById('mapSection') 
-
-   }; 
-
-
-
-   function showSection(sectionId) { 
-
-    Object.entries(sections).forEach(([id, element]) => { 
-
-     element.style.display = id === sectionId ? 'block' : 'none'; 
-
-    }); 
-
-    if (sectionId === 'mapSection') { 
-
-     initMap(); 
-
-    } 
-
-   } 
-
-
-
-   // Navigation 
-
-   document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection')); 
-
-   document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection')); 
-
-   document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection')); 
-
-   document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection')); 
-
-
-
-   // Map initialization 
-
-   let map = null; 
-
-   function initMap() { 
-
-    if (!map) { 
-
-     map = new naver.maps.Map('map', { 
-
-      center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul 
-
-      zoom: 12 
-
-     }); 
-
-    } 
-
-   } 
-
-
-
-   // Form handlers 
-
-   document.getElementById('sellForm').addEventListener('submit', async (e) => { 
-
-    e.preventDefault(); 
-
-    try { 
-
-     const data = { 
-
-      itemType: document.getElementById('itemType').value, 
-
-      price: parseInt(document.getElementById('price').value), 
-
-      address: document.getElementById('address').value, 
-
-      timestamp: Date.now() 
-
-     }; 
-
-      
-
-     await push(ref(db, '매물'), data); 
-
-     alert('매물이 등록되었습니다!'); 
-
-     e.target.reset(); 
-
-     showSection('homeSection'); 
-
-    } catch (error) { 
-
-     console.error('Error posting item:', error); 
-
-     alert('등록 중 오류가 발생했습니다.'); 
-
-    } 
-
-   }); 
-
-
-
-   document.getElementById('buyForm').addEventListener('submit', async (e) => { 
-
-    e.preventDefault(); 
-
-    try { 
-
-     const data = { 
-
-      buyType: document.getElementById('buyType').value, 
-
-      maxPrice: parseInt(document.getElementById('maxPrice').value), 
-
-      buyAddress: document.getElementById('buyAddress').value, 
-
-      timestamp: Date.now() 
-
-     }; 
-
-      
-
-     await push(ref(db, '매수자'), data); 
-
-     alert('매수 요청이 등록되었습니다!'); 
-
-     e.target.reset(); 
-
-     showSection('homeSection'); 
-
-    } catch (error) { 
-
-     console.error('Error posting buy request:', error); 
-
-     alert('등록 중 오류가 발생했습니다.'); 
-
-    } 
-
-   }); 
-
-
-
-   // Load recent listings 
-
-   function updateRecentListings() { 
-
-    const listingsRef = ref(db, '매물'); 
-
-    onValue(listingsRef, (snapshot) => { 
-
-     const listings = snapshot.val(); 
-
-     const recentListingsDiv = document.getElementById('recentListings'); 
-
-     recentListingsDiv.innerHTML = ''; 
-
-      
-
-     if (listings) { 
-
-      Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => { 
-
-       const listingDiv = document.createElement('div'); 
-
-       // Check for undefined and format 
-
-       const price = data.price; 
-
-       const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A'; 
-
-       listingDiv.innerHTML = `  
-
-        <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;"> 
-
-         <h3>${data.itemType}</h3> 
-
-         <p>가격: ${formattedPrice}만원</p> 
-
-         <p>주소: ${data.address}</p> 
-
-        </div> 
-
-       `; 
-
-       recentListingsDiv.appendChild(listingDiv); 
-
-      }); 
-
-     } 
-
-    }); 
-
-   } 
-
-
-
-   // Initialize the app 
-
-   updateRecentListings(); 
-
-   showSection('homeSection'); 
-
-  </script> 
-
- </body> 
-
- </html>
+        });
+      }
+    }
+
+    // Form handlers
+    document.getElementById('sellForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const data = {
+          itemType: document.getElementById('itemType').value,
+          price: parseInt(document.getElementById('price').value),
+          address: document.getElementById('address').value,
+          timestamp: Date.now()
+        };
+
+        await push(ref(db, '매물'), data);
+        alert('매물이 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      } catch (error) {
+        console.error('Error posting item:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
+    });
+
+    document.getElementById('buyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const data = {
+          buyType: document.getElementById('buyType').value,
+          maxPrice: parseInt(document.getElementById('maxPrice').value),
+          buyAddress: document.getElementById('buyAddress').value,
+          timestamp: Date.now()
+        };
+
+        await push(ref(db, '매수자'), data);
+        alert('매수 요청이 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      } catch (error) {
+        console.error('Error posting buy request:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
+    });
+
+    // Load recent listings
+    function updateRecentListings() {
+      const listingsRef = ref(db, '매물');
+      onValue(listingsRef, (snapshot) => {
+        const listings = snapshot.val();
+        const recentListingsDiv = document.getElementById('recentListings');
+        recentListingsDiv.innerHTML = '';
+
+        if (listings) {
+          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
+            const listingDiv = document.createElement('div');
+            // Check for undefined and format
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.innerHTML = `
+              <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <h3>${data.itemType}</h3>
+                <p>가격: ${formattedPrice}만원</p>
+                <p>주소: ${data.address}</p>
+              </div>
+            `;
+            recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
+
+    // Initialize the app
+    updateRecentListings();
+    showSection('homeSection');
+  </script>
+</body>
+
+</html>
