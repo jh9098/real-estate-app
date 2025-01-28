@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>부동산 PWA</title>
-  
+
+  <!-- Naver Maps API Script (Make sure this is at the top) -->
+  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y" charset="utf-8"></script>
+
   <style>
     /* Basic styles to get started */
     body {
@@ -64,9 +67,6 @@
       margin-bottom: 30px;
     }
   </style>
-
-  <!-- Naver Maps API Script -->
-  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y"></script>
 </head>
 <body>
   <header>
@@ -229,10 +229,13 @@
         if (listings) {
           Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
+            // Check for undefined and format
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
             listingDiv.innerHTML = ` 
               <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
                 <h3>${data.itemType}</h3>
-                <p>가격: ${data.price.toLocaleString()}만원</p>
+                <p>가격: ${formattedPrice}만원</p>
                 <p>주소: ${data.address}</p>
               </div>
             `;
