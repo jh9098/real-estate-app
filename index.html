@@ -36,7 +36,7 @@
 
     document.getElementById('mapBtn').addEventListener('click', () => {
       console.log("Map button clicked");
-      initMap(); // Initialize Google Map
+      initMap(); // Initialize Naver Map
     });
 
     document.getElementById('chatBtn').addEventListener('click', () => {
@@ -54,11 +54,11 @@
       // Code to show buy form
     });
 
-    // Google Maps Initialization
+    // Naver Maps Initialization
     function initMap() {
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 37.5665, lng: 126.9780 }, // Default to Seoul
-        zoom: 12,
+      var map = new naver.maps.Map('map', {
+        center: new naver.maps.LatLng(37.5665, 126.9780), // Default to Seoul
+        zoom: 12
       });
 
       // Example posts and their locations on map
@@ -67,14 +67,15 @@
       ];
 
       posts.forEach(post => {
-        new google.maps.Marker({
-          position: { lat: post.lat, lng: post.lng },
-          map,
+        new naver.maps.Marker({
+          position: new naver.maps.LatLng(post.lat, post.lng),
+          map: map,
           title: post.title,
         });
       });
     }
   </script>
+  <!-- Naver Maps API with your API key -->
   <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=4RD2ebOkRyPtW9NdIKy3WHjihdskrZtzz3XfPqKM"></script>
 </head>
 <body>
