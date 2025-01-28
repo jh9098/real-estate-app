@@ -64,17 +64,17 @@
       border: 1px solid #ddd;
     }
 
-    section {
-      margin-bottom: 30px;
-    }
-
-    /* 스타일 추가 */
     #roadview {
       width: 100%;
       height: 400px;
       margin-top: 20px;
       border: 1px solid #ddd;
     }
+
+    section {
+      margin-bottom: 30px;
+    }
+
   </style>
 </head>
 
@@ -131,8 +131,7 @@
 
   <section id="mapSection" style="display: none;">
     <div id="map"></div>
-    <!-- 로드뷰를 위한 공간 -->
-    <div id="roadview"></div>
+    <div id="roadview"></div> <!-- 로드뷰를 위한 공간 -->
   </section>
 
   <!-- Firebase SDK (Modular) -->
@@ -180,6 +179,8 @@
 
     // Map initialization
     let map = null;
+    let roadview = null; // 로드뷰 객체 초기화
+
     function initMap() {
       if (!map) {
         map = new naver.maps.Map('map', {
@@ -187,7 +188,6 @@
           zoom: 12
         });
 
-        // 지도 클릭 시 로드뷰 활성화
         naver.maps.Event.addListener(map, 'click', function (e) {
           const latlng = e.coord;
           initRoadview(latlng);
@@ -196,9 +196,7 @@
     }
 
     // Roadview initialization
-    let roadview = null;
     function initRoadview(latlng) {
-      // 로드뷰 설정
       if (!roadview) {
         roadview = new naver.maps.Roadview('roadview');
       }
@@ -285,6 +283,7 @@
     updateRecentListings();
     showSection('homeSection');
   </script>
+
 </body>
 
 </html>
