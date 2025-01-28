@@ -103,7 +103,7 @@
       <label for="itemType">종류:</label>
       <input type="text" id="itemType" placeholder="예: 아파트" required>
 
-      <label for="price">가격 (만원):</label>
+      <label for="price">매도가격 (만원):</label>
       <input type="number" id="price" placeholder="예: 50000" required>
 
       <label for="address">주소:</label>
@@ -116,13 +116,13 @@
   <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
-      <label for="buyType">찾는 매물 종류:</label>
+      <label for="buyType">종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
 
-      <label for="maxPrice">희망 최대가격 (만원):</label>
+      <label for="maxPrice">매수가격 (만원):</label>
       <input type="number" id="maxPrice" placeholder="예: 50000" required>
 
-      <label for="buyAddress">희망 지역:</label>
+      <label for="buyAddress">주소:</label>
       <input type="text" id="buyAddress" placeholder="예: 서울시 종로구" required>
 
       <button type="submit">등록하기</button>
@@ -261,7 +261,7 @@
         recentListingsDiv.innerHTML = '';
 
         if (listings) {
-          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
+          Object.entries(listings).reverse().slice(0, 50).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
             // Check for undefined and format
             const price = data.price;
