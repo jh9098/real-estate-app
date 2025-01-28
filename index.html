@@ -4,79 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>부동산 PWA</title>
-
-  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y" charset="utf-8"></script>
-
-  <style>
-    /* Basic styles to get started */
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    #navbar {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 20px;
-      padding: 10px;
-      background-color: #f0f0f0;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-
-    input {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    #map {
-      width: 100%;
-      height: 400px;
-      margin-top: 20px;
-      border: 1px solid #ddd;
-    }
-
-    section {
-      margin-bottom: 30px;
-    }
-  </style>
-</head>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css"> </head>
 <body>
   <header>
     <h1>부동산 매물 및 매수자 등록</h1>
   </header>
 
   <div id="navbar">
-    <button id="homeBtn"> 홈</button>
-    <button id="mapBtn">️ 지도</button>
-    <button id="sellBtn"> 매물등록</button>
-    <button id="buyBtn"> 매수등록</button>
+    <button id="homeBtn">홈</button>
+    <button id="mapBtn">지도</button>
+    <button id="sellBtn">매물등록</button>
+    <button id="buyBtn">매수등록</button>
   </div>
 
   <section id="homeSection">
@@ -122,19 +61,9 @@
   </section>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    // ... (Firebase 설정 및 초기화 코드)
 
-    // Firebase Configuration
-    const firebaseConfig = {
-      // ... (Your Firebase config)
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // Section management
+    // 섹션 관리
     const sections = {
       homeSection: document.getElementById('homeSection'),
       sellSection: document.getElementById('sellSection'),
@@ -148,39 +77,39 @@
       });
     }
 
-    // Navigation
+    // 탐색 버튼 클릭 이벤트 리스너
     document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
+    document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
 
-    // Map initialization
-    let map = null;
-    function initMap() {
-      if (!map && typeof naver !== 'undefined' && typeof naver.maps !== 'undefined') {
-        map = new naver.maps.Map('map', {
-          center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
-          zoom: 12
-        });
-      } else {
-        console.log("Naver Maps API가 아직 로드되지 않았거나, map이 이미 초기화되었습니다.");
-      }
+    // ... (지도 초기화 코드)
+
+    // 폼 제출 이벤트 리스너
+    document.getElementById('sellForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      // ... (매물 등록 로직)
+    });
+
+    document.getElementById('buyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      // ... (매수 등록 로직)
+    });
+
+    // ... (최근 매물 목록 업데이트 코드)
+
+    // Service Worker 등록
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('Service Worker 등록 성공:', registration);
+          })
+          .catch((error) => {
+            console.error('Service Worker 등록 실패:', error);
+          });
+      });
     }
-
-    // Map 섹션 표시 시 initMap 호출
-    document.getElementById('mapBtn').addEventListener('click', () => {
-      showSection('mapSection');
-      initMap(); // 클릭 시 initMap 호출
-    });
-
-    // 페이지 로드 후 naver 객체 확인 및 initMap 호출 (추가)
-    window.addEventListener('load', () => {
-        if (typeof naver !== 'undefined' && typeof naver.maps !== 'undefined') {
-            initMap();
-        }
-    });
-
-    // Form handlers
-    // ... (rest of your code)
   </script>
 </body>
 </html>
