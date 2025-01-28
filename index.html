@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>부동산 PWA</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css"> </head>
+  <link rel="stylesheet" href="style.css">
+  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y" 
+          onload="initMap();" defer async charset="utf-8"></script>
+</head>
 <body>
   <header>
     <h1>부동산 매물 및 매수자 등록</h1>
@@ -20,8 +23,7 @@
 
   <section id="homeSection">
     <h2>최근 등록 매물</h2>
-    <div id="recentListings">
-      </div>
+    <div id="recentListings"></div>
   </section>
 
   <section id="sellSection" style="display: none;">
@@ -29,13 +31,10 @@
     <form id="sellForm">
       <label for="itemType">종류:</label>
       <input type="text" id="itemType" placeholder="예: 아파트" required>
-
       <label for="price">가격 (만원):</label>
       <input type="number" id="price" placeholder="예: 50000" required>
-
       <label for="address">주소:</label>
       <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required>
-
       <button type="submit">등록하기</button>
     </form>
   </section>
@@ -45,13 +44,10 @@
     <form id="buyForm">
       <label for="buyType">찾는 매물 종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
-
       <label for="maxPrice">희망 최대가격 (만원):</label>
       <input type="number" id="maxPrice" placeholder="예: 50000" required>
-
       <label for="buyAddress">희망 지역:</label>
       <input type="text" id="buyAddress" placeholder="예: 서울시 종로구" required>
-
       <button type="submit">등록하기</button>
     </form>
   </section>
@@ -61,9 +57,16 @@
   </section>
 
   <script type="module">
-    // ... (Firebase 설정 및 초기화 코드)
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-    // 섹션 관리
+    const firebaseConfig = {
+      // 본인의 Firebase 설정
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     const sections = {
       homeSection: document.getElementById('homeSection'),
       sellSection: document.getElementById('sellSection'),
@@ -77,35 +80,97 @@
       });
     }
 
-    // 탐색 버튼 클릭 이벤트 리스너
     document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
     document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
 
-    // ... (지도 초기화 코드)
+    let map = null;
+    function initMap() {
+      if (typeof naver !== 'undefined' && typeof naver.maps !== 'undefined') {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780),
+          zoom: 12
+        });
+      } else {
+        console.log("Naver Maps API가 아직 로드되지 않았거나, map이 이미 초기화되었습니다.");
+      }
+    }
 
-    // 폼 제출 이벤트 리스너
     document.getElementById('sellForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      // ... (매물 등록 로직)
+      const data = {
+        itemType: document.getElementById('itemType').value,
+        price: parseInt(document.getElementById('price').value),
+        address: document.getElementById('address').value,
+        timestamp: Date.now()
+      };
+      push(ref(db, '매물'), data)
+        .then(() => {
+          alert('매물이 등록되었습니다!');
+          document.getElementById('sellForm').reset();
+          showSection('homeSection');
+        })
+        .catch((error) => {
+          console.error('Error posting item:', error);
+          alert('등록 중 오류가 발생했습니다.');
+        });
     });
 
     document.getElementById('buyForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      // ... (매수 등록 로직)
+      const data = {
+        buyType: document.getElementById('buyType').value,
+        maxPrice: parseInt(document.getElementById('maxPrice').value),
+        buyAddress: document.getElementById('buyAddress').value,
+        timestamp: Date.now()
+      };
+      push(ref(db, '매수자'), data)
+        .then(() => {
+          alert('매수 요청이 등록되었습니다!');
+          document.getElementById('buyForm').reset();
+          showSection('homeSection');
+        })
+        .catch((error) => {
+          console.error('Error posting buy request:', error);
+          alert('등록 중 오류가 발생했습니다.');
+        });
     });
 
-    // ... (최근 매물 목록 업데이트 코드)
+    function updateRecentListings() {
+      const listingsRef = ref(db, '매물');
+      onValue(listingsRef, (snapshot) => {
+        const listings = snapshot.val();
+        const recentListingsDiv = document.getElementById('recentListings');
+        recentListingsDiv.innerHTML = '';
+        if (listings) {
+          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
+            const listingDiv = document.createElement('div');
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.innerHTML = `
+              <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <h3>${data.itemType}</h3>
+                <p>가격: ${formattedPrice}만원</p>
+                <p>주소: ${data.address}</p>
+              </div>
+            `;
+            recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
 
-    // Service Worker 등록
+    updateRecentListings();
+    showSection('homeSection');
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
+          .then(registration => {
             console.log('Service Worker 등록 성공:', registration);
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Service Worker 등록 실패:', error);
           });
       });
