@@ -229,7 +229,7 @@
         if (listings) {
           Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
-            listingDiv.innerHTML = `
+            listingDiv.innerHTML = ` 
               <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
                 <h3>${data.itemType}</h3>
                 <p>가격: ${data.price.toLocaleString()}만원</p>
