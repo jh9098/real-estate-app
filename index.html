@@ -64,6 +64,13 @@
       border: 1px solid #ddd;
     }
 
+    #roadview {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
     section {
       margin-bottom: 30px;
     }
@@ -79,6 +86,7 @@
   <div id="navbar">
     <button id="homeBtn">🏠 홈</button>
     <button id="mapBtn">🗺️ 지도</button>
+    <button id="roadviewBtn">🚗 로드뷰</button> <!-- 로드뷰 버튼 추가 -->
     <button id="sellBtn">🏢 매물등록</button>
     <button id="buyBtn">🔍 매수등록</button>
   </div>
@@ -108,7 +116,6 @@
 
   <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
-
     <form id="buyForm">
       <label for="buyType">찾는 매물 종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
@@ -125,7 +132,7 @@
 
   <section id="mapSection" style="display: none;">
     <div id="map"></div>
-    <div id="roadview" style="width: 100%; height: 400px;"></div> <!-- 로드뷰 추가 -->
+    <div id="roadview"></div> <!-- 로드뷰 추가 -->
   </section>
 
   <!-- Firebase SDK (Modular) -->
@@ -162,7 +169,6 @@
       });
       if (sectionId === 'mapSection') {
         initMap();
-        initRoadview(); // 지도 화면에서 로드뷰도 초기화
       }
     }
 
@@ -187,9 +193,9 @@
     let roadview = null;
     function initRoadview() {
       if (!roadview) {
-        roadview = new naver.maps.Roadview(document.getElementById('roadview'));
+        roadview = new naver.maps.Roadview('roadview'); // 수정된 부분: 'new' 키워드 제거
         const rvClient = new naver.maps.RoadviewClient();
-        const location = new naver.maps.LatLng(37.5665, 126.9780); // Seoul center for Roadview
+        const location = new naver.maps.LatLng(37.5665, 126.9780); // 서울 중심으로 로드뷰 초기화
         roadview.setViewpoint(location);
         rvClient.getNearestPanoId(location, function(panoId) {
           if (panoId) {
@@ -198,6 +204,12 @@
         });
       }
     }
+
+    // 로드뷰 버튼 클릭 시 로드뷰 초기화
+    document.getElementById('roadviewBtn').addEventListener('click', function () {
+      showSection('mapSection');
+      initRoadview();
+    });
 
     // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
@@ -271,6 +283,7 @@
     updateRecentListings();
     showSection('homeSection');
   </script>
+
 </body>
 
 </html>
