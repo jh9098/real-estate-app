@@ -6,80 +6,9 @@
   <title>부동산 PWA</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-
-  <!-- Naver Maps API Script (Ensure it's loaded before any other code) -->
+  
+  <!-- Naver Maps API Script -->
   <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y"></script>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
-
-  <script>
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
-      authDomain: "real-estate-app-7a001.firebaseapp.com",
-      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "real-estate-app-7a001",
-      storageBucket: "real-estate-app-7a001.appspot.com",
-      messagingSenderId: "229808061189",
-      appId: "1:229808061189:web:fa083511b468b44e3556c",
-      measurementId: "G-TZ4X11LZ57"
-    
-    };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // Event Listeners for button actions
-    document.getElementById('homeBtn').addEventListener('click', () => {
-      console.log("Home button clicked");
-      // Handle home button logic
-    });
-
-    document.getElementById('mapBtn').addEventListener('click', () => {
-      console.log("Map button clicked");
-      initMap(); // Initialize Naver Map when the Map button is clicked
-    });
-
-    document.getElementById('chatBtn').addEventListener('click', () => {
-      console.log("Chat button clicked");
-      // Handle chat button logic
-    });
-
-    document.getElementById('sellBtn').addEventListener('click', () => {
-      console.log("Sell button clicked");
-      // Handle sell button logic
-    });
-
-    document.getElementById('buyBtn').addEventListener('click', () => {
-      console.log("Buy button clicked");
-      // Handle buy button logic
-    });
-
-    // Naver Map Initialization
-    function initMap() {
-      console.log('Initializing Naver Map...');
-      var map = new naver.maps.Map('map', {
-        center: new naver.maps.LatLng(37.5665, 126.9780), // Default to Seoul
-        zoom: 12
-      });
-
-      // Example data for markers
-      const posts = [
-        { lat: 37.5665, lng: 126.9780, title: 'Post 1' }
-      ];
-
-      posts.forEach(post => {
-        new naver.maps.Marker({
-          position: new naver.maps.LatLng(post.lat, post.lng),
-          map: map,
-          title: post.title,
-        });
-      });
-    }
-  </script>
 </head>
 <body>
   <header>
@@ -97,19 +26,36 @@
   <!-- Home Section -->
   <section id="homeSection">
     <h2>매물 등록</h2>
-    <form id="매물등록폼">
-      <label for="종류">종류:</label>
-      <input type="text" id="종류" placeholder="예: 아파트">
-      <label for="가격">가격 (만원):</label>
-      <input type="number" id="가격" placeholder="예: 50000">
-      <label for="주소">주소:</label>
-      <input type="text" id="주소" placeholder="예: 서울시 종로구 새문안로 68">
+    <form id="sellForm">
+      <label for="itemType">종류:</label>
+      <input type="text" id="itemType" placeholder="예: 아파트" required>
+      
+      <label for="price">가격 (만원):</label>
+      <input type="number" id="price" placeholder="예: 50000" required>
+      
+      <label for="address">주소:</label>
+      <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required>
+      
+      <button type="submit">등록</button>
+    </form>
+
+    <h2>매수 등록</h2>
+    <form id="buyForm">
+      <label for="buyType">찾는 매물 종류:</label>
+      <input type="text" id="buyType" placeholder="예: 아파트" required>
+      
+      <label for="maxPrice">희망 최대가격 (만원):</label>
+      <input type="number" id="maxPrice" placeholder="예: 50000" required>
+      
+      <label for="buyAddress">희망 지역:</label>
+      <input type="text" id="buyAddress" placeholder="예: 서울시 종로구" required>
+      
       <button type="submit">등록</button>
     </form>
   </section>
 
   <!-- Map Section -->
-  <section id="mapSection">
+  <section id="mapSection" style="display: none;">
     <div id="map" style="height: 400px;"></div>
   </section>
 
@@ -117,36 +63,94 @@
     <p>© 2025 부동산 PWA</p>
   </footer>
 
-  <script>
-    // Firebase Logic for submitting forms
-    document.getElementById('sellForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const itemType = document.getElementById('itemType').value;
-      const price = document.getElementById('price').value;
-      const address = document.getElementById('address').value;
+  <!-- Firebase SDK (Modular) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getDatabase, ref, push } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-      const sellRef = db.ref('매물');
-      push(sellRef, { itemType, price, address })
-        .then(() => {
-          alert('Item successfully posted for sale!');
-          document.getElementById('sellForm').reset();
-        })
-        .catch((error) => console.error('Error posting item for sale:', error));
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+      authDomain: "real-estate-app-7a001.firebaseapp.com",
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "real-estate-app-7a001",
+      storageBucket: "real-estate-app-7a001.appspot.com",
+      messagingSenderId: "229808061189",
+      appId: "1:229808061189:web:fa083511b468b44e3556c",
+      measurementId: "G-TZ4X11LZ57"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Section visibility management
+    const sections = {
+      homeSection: document.getElementById('homeSection'),
+      mapSection: document.getElementById('mapSection')
+    };
+
+    function showSection(sectionId) {
+      Object.entries(sections).forEach(([id, element]) => {
+        element.style.display = id === sectionId ? 'block' : 'none';
+      });
+    }
+
+    // Navigation event listeners
+    document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
+    document.getElementById('mapBtn').addEventListener('click', () => {
+      showSection('mapSection');
+      initMap();
     });
 
-    document.getElementById('buyForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const buyType = document.getElementById('buyType').value;
-      const maxPrice = document.getElementById('maxPrice').value;
-      const buyAddress = document.getElementById('buyAddress').value;
+    // Naver Map Initialization
+    let map = null;
+    function initMap() {
+      if (!map) {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
+          zoom: 12
+        });
+      }
+    }
 
-      const buyRef = db.ref('매수자');
-      push(buyRef, { buyType, maxPrice, buyAddress })
-        .then(() => {
-          alert('Buy request successfully posted!');
-          document.getElementById('buyForm').reset();
-        })
-        .catch((error) => console.error('Error posting buy request:', error));
+    // Form submission handlers
+    document.getElementById('sellForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const data = {
+          itemType: document.getElementById('itemType').value,
+          price: parseInt(document.getElementById('price').value),
+          address: document.getElementById('address').value,
+          timestamp: Date.now()
+        };
+        
+        await push(ref(db, '매물'), data);
+        alert('매물이 등록되었습니다!');
+        e.target.reset();
+      } catch (error) {
+        console.error('Error posting item:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
+    });
+
+    document.getElementById('buyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const data = {
+          buyType: document.getElementById('buyType').value,
+          maxPrice: parseInt(document.getElementById('maxPrice').value),
+          buyAddress: document.getElementById('buyAddress').value,
+          timestamp: Date.now()
+        };
+        
+        await push(ref(db, '매수자'), data);
+        alert('매수 요청이 등록되었습니다!');
+        e.target.reset();
+      } catch (error) {
+        console.error('Error posting buy request:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
     });
   </script>
 </body>
