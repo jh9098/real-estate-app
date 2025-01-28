@@ -7,105 +7,153 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   <script type="module">
-    // Firebase SDK import
+    // Firebase SDK imports
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
     import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
     // Firebase Configuration
     const firebaseConfig = {
-        apiKey: "AIzaSyBX12y9KG-qBDQXTQeVxaGKjDQc_ztdWYs",
-        authDomain: "real-estate-app-7a001.firebaseapp.com",
-        databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "real-estate-app-7a001",
-        storageBucket: "real-estate-app-7a001.firebasestorage.app",
-        messagingSenderId: "229808061189",
-        appId: "1:229808061189:web:fa0835141b468b44e3556c",
-        measurementId: "G-T2X411LZ57"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
+        measurementId: "YOUR_MEASUREMENT_ID"
     };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    // Event listeners for button actions
+    document.getElementById('homeBtn').addEventListener('click', () => {
+      console.log("Home button clicked");
+      // Code to show posts or navigate
+    });
+
+    document.getElementById('mapBtn').addEventListener('click', () => {
+      console.log("Map button clicked");
+      initMap(); // Initialize Google Map
+    });
+
+    document.getElementById('chatBtn').addEventListener('click', () => {
+      console.log("Chat button clicked");
+      // Code to display chat
+    });
+
+    document.getElementById('sellBtn').addEventListener('click', () => {
+      console.log("Sell button clicked");
+      // Code to show sell form
+    });
+
+    document.getElementById('buyBtn').addEventListener('click', () => {
+      console.log("Buy button clicked");
+      // Code to show buy form
+    });
+
+    // Google Maps Initialization
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 37.5665, lng: 126.9780 }, // Default to Seoul
+        zoom: 12,
+      });
+
+      // Example posts and their locations on map
+      const posts = [
+        { lat: 37.5665, lng: 126.9780, title: 'Post 1' }
+      ];
+
+      posts.forEach(post => {
+        new google.maps.Marker({
+          position: { lat: post.lat, lng: post.lng },
+          map,
+          title: post.title,
+        });
+      });
+    }
   </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAK8ej_VB7StmK2IOqN7Q37BRIiAQ41ULc&callback=initMap"></script>
 </head>
 <body>
   <header>
     <h1>부동산 매물 및 매수자 등록 PWA</h1>
   </header>
-  <main>
-    <!-- Navbar with buttons -->
-    <div id="navbar">
-      <button id="homeBtn">🏠 Home</button>
-      <button id="mapBtn">🗺️ Map</button>
-      <button id="chatBtn">💬 Chat</button>
-      <button id="sellBtn">🛒 Sell</button>
-      <button id="buyBtn">💰 Buy</button>
-    </div>
 
-    <!-- Home Section -->
-    <section id="homeSection">
-      <h2>매물 등록</h2>
-      <form id="매물등록폼">
-        <label for="종류">종류:</label>
-        <input type="text" id="종류" placeholder="예: 아파트">
-        <label for="가격">가격 (만원):</label>
-        <input type="number" id="가격" placeholder="예: 50000">
-        <label for="주소">주소:</label>
-        <input type="text" id="주소" placeholder="예: 서울시 종로구 새문안로 68">
-        <button type="submit">등록</button>
-      </form>
-    </section>
+  <div id="navbar">
+    <button id="homeBtn">🏠 Home</button>
+    <button id="mapBtn">🗺️ Map</button>
+    <button id="chatBtn">💬 Chat</button>
+    <button id="sellBtn">🛒 Sell</button>
+    <button id="buyBtn">💰 Buy</button>
+  </div>
 
-    <!-- Sell Section -->
-    <section id="sellSection">
-      <h2>Sell Property</h2>
-      <form id="sellForm">
-        <label for="itemType">Item Type:</label>
-        <input type="text" id="itemType" placeholder="E.g. Apartment">
-        <label for="price">Price (만원):</label>
-        <input type="number" id="price" placeholder="E.g. 50000">
-        <label for="address">Address:</label>
-        <input type="text" id="address" placeholder="E.g. 서울시 강남구 테헤란로 456">
-        <button type="submit">Register</button>
-      </form>
-    </section>
+  <!-- Home Section -->
+  <section id="homeSection">
+    <h2>매물 등록</h2>
+    <form id="매물등록폼">
+      <label for="종류">종류:</label>
+      <input type="text" id="종류" placeholder="예: 아파트">
+      <label for="가격">가격 (만원):</label>
+      <input type="number" id="가격" placeholder="예: 50000">
+      <label for="주소">주소:</label>
+      <input type="text" id="주소" placeholder="예: 서울시 종로구 새문안로 68">
+      <button type="submit">등록</button>
+    </form>
+  </section>
 
-    <!-- Buy Section -->
-    <section id="buySection">
-      <h2>Buy Property</h2>
-      <form id="buyForm">
-        <label for="buyType">Item Type:</label>
-        <input type="text" id="buyType" placeholder="E.g. Apartment">
-        <label for="maxPrice">Max Price (만원):</label>
-        <input type="number" id="maxPrice" placeholder="E.g. 60000">
-        <label for="buyAddress">Preferred Address:</label>
-        <input type="text" id="buyAddress" placeholder="E.g. 서울시 강남구 테헤란로 456">
-        <button type="submit">Register</button>
-      </form>
-    </section>
+  <!-- Sell Section -->
+  <section id="sellSection">
+    <h2>Sell Property</h2>
+    <form id="sellForm">
+      <label for="itemType">Item Type:</label>
+      <input type="text" id="itemType" placeholder="E.g. Apartment">
+      <label for="price">Price (만원):</label>
+      <input type="number" id="price" placeholder="E.g. 50000">
+      <label for="address">Address:</label>
+      <input type="text" id="address" placeholder="E.g. 서울시 강남구 테헤란로 456">
+      <button type="submit">Register</button>
+    </form>
+  </section>
 
-    <!-- Map Section (Google Map) -->
-    <section id="mapSection">
-      <div id="map" style="height: 400px;"></div>
-    </section>
+  <!-- Buy Section -->
+  <section id="buySection">
+    <h2>Buy Property</h2>
+    <form id="buyForm">
+      <label for="buyType">Item Type:</label>
+      <input type="text" id="buyType" placeholder="E.g. Apartment">
+      <label for="maxPrice">Max Price (만원):</label>
+      <input type="number" id="maxPrice" placeholder="E.g. 60000">
+      <label for="buyAddress">Preferred Address:</label>
+      <input type="text" id="buyAddress" placeholder="E.g. 서울시 강남구 테헤란로 456">
+      <button type="submit">Register</button>
+    </form>
+  </section>
 
-    <!-- Chat Section -->
-    <section id="chatSection">
-      <h2>Chat</h2>
-      <div id="chatList"></div>
-    </section>
+  <!-- Map Section -->
+  <section id="mapSection">
+    <div id="map" style="height: 400px;"></div>
+  </section>
 
-    <!-- Display Posts -->
-    <section id="postsSection">
-      <h2>등록된 매물</h2>
-      <ul id="매물목록"></ul>
-      <h2>등록된 매수자</h2>
-      <ul id="매수자목록"></ul>
-    </section>
-  </main>
+  <!-- Chat Section -->
+  <section id="chatSection">
+    <h2>Chat</h2>
+    <div id="chatList"></div>
+  </section>
+
+  <!-- Display Posts -->
+  <section id="postsSection">
+    <h2>등록된 매물</h2>
+    <ul id="매물목록"></ul>
+    <h2>등록된 매수자</h2>
+    <ul id="매수자목록"></ul>
+  </section>
+
   <footer>
     <p>© 2025 부동산 PWA</p>
   </footer>
+
   <script type="module">
     // Firebase Logic for submitting forms
     document.getElementById('sellForm').addEventListener('submit', (e) => {
@@ -168,28 +216,6 @@ const analytics = getAnalytics(app);
         });
       }
     });
-  </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAK8ej_VB7StmK2IOqN7Q37BRIiAQ41ULc&callback=initMap"></script>
-  <script type="module">
-    function initMap() {
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 37.5665, lng: 126.9780 }, // Default to Seoul
-        zoom: 12,
-      });
-
-      // Add markers (example)
-      const posts = [
-        { lat: 37.5665, lng: 126.9780, title: 'Post 1' }, // Example coordinates
-      ];
-
-      posts.forEach(post => {
-        new google.maps.Marker({
-          position: { lat: post.lat, lng: post.lng },
-          map,
-          title: post.title,
-        });
-      });
-    }
   </script>
 </body>
 </html>
