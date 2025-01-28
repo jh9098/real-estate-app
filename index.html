@@ -4,27 +4,90 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>부동산 PWA</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
   
+  <style>
+    /* Basic styles to get started */
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #navbar {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+  </style>
+
   <!-- Naver Maps API Script -->
   <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y"></script>
 </head>
 <body>
   <header>
-    <h1>부동산 매물 및 매수자 등록 PWA</h1>
+    <h1>부동산 매물 및 매수자 등록</h1>
   </header>
 
   <div id="navbar">
-    <button id="homeBtn">🏠 Home</button>
-    <button id="mapBtn">🗺️ Map</button>
-    <button id="chatBtn">💬 Chat</button>
-    <button id="sellBtn">🛒 Sell</button>
-    <button id="buyBtn">💰 Buy</button>
+    <button id="homeBtn">🏠 홈</button>
+    <button id="mapBtn">🗺️ 지도</button>
+    <button id="sellBtn">🏢 매물등록</button>
+    <button id="buyBtn">🔍 매수등록</button>
   </div>
 
-  <!-- Home Section -->
   <section id="homeSection">
+    <h2>최근 등록 매물</h2>
+    <div id="recentListings">
+      <!-- Recent listings will be populated here -->
+    </div>
+  </section>
+
+  <section id="sellSection" style="display: none;">
     <h2>매물 등록</h2>
     <form id="sellForm">
       <label for="itemType">종류:</label>
@@ -36,9 +99,11 @@
       <label for="address">주소:</label>
       <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required>
       
-      <button type="submit">등록</button>
+      <button type="submit">등록하기</button>
     </form>
+  </section>
 
+  <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
       <label for="buyType">찾는 매물 종류:</label>
@@ -50,23 +115,18 @@
       <label for="buyAddress">희망 지역:</label>
       <input type="text" id="buyAddress" placeholder="예: 서울시 종로구" required>
       
-      <button type="submit">등록</button>
+      <button type="submit">등록하기</button>
     </form>
   </section>
 
-  <!-- Map Section -->
   <section id="mapSection" style="display: none;">
-    <div id="map" style="height: 400px;"></div>
+    <div id="map"></div>
   </section>
-
-  <footer>
-    <p>© 2025 부동산 PWA</p>
-  </footer>
 
   <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, push } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
     // Firebase Configuration
     const firebaseConfig = {
@@ -76,17 +136,18 @@
       projectId: "real-estate-app-7a001",
       storageBucket: "real-estate-app-7a001.appspot.com",
       messagingSenderId: "229808061189",
-      appId: "1:229808061189:web:fa083511b468b44e3556c",
-      measurementId: "G-TZ4X11LZ57"
+      appId: "1:229808061189:web:fa083511b468b44e3556c"
     };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Section visibility management
+    // Section management
     const sections = {
       homeSection: document.getElementById('homeSection'),
+      sellSection: document.getElementById('sellSection'),
+      buySection: document.getElementById('buySection'),
       mapSection: document.getElementById('mapSection')
     };
 
@@ -94,16 +155,18 @@
       Object.entries(sections).forEach(([id, element]) => {
         element.style.display = id === sectionId ? 'block' : 'none';
       });
+      if (sectionId === 'mapSection') {
+        initMap();
+      }
     }
 
-    // Navigation event listeners
+    // Navigation
     document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
-    document.getElementById('mapBtn').addEventListener('click', () => {
-      showSection('mapSection');
-      initMap();
-    });
+    document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
+    document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
+    document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
 
-    // Naver Map Initialization
+    // Map initialization
     let map = null;
     function initMap() {
       if (!map) {
@@ -114,7 +177,7 @@
       }
     }
 
-    // Form submission handlers
+    // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
@@ -128,6 +191,7 @@
         await push(ref(db, '매물'), data);
         alert('매물이 등록되었습니다!');
         e.target.reset();
+        showSection('homeSection');
       } catch (error) {
         console.error('Error posting item:', error);
         alert('등록 중 오류가 발생했습니다.');
@@ -147,11 +211,40 @@
         await push(ref(db, '매수자'), data);
         alert('매수 요청이 등록되었습니다!');
         e.target.reset();
+        showSection('homeSection');
       } catch (error) {
         console.error('Error posting buy request:', error);
         alert('등록 중 오류가 발생했습니다.');
       }
     });
+
+    // Load recent listings
+    function updateRecentListings() {
+      const listingsRef = ref(db, '매물');
+      onValue(listingsRef, (snapshot) => {
+        const listings = snapshot.val();
+        const recentListingsDiv = document.getElementById('recentListings');
+        recentListingsDiv.innerHTML = '';
+        
+        if (listings) {
+          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
+            const listingDiv = document.createElement('div');
+            listingDiv.innerHTML = `
+              <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <h3>${data.itemType}</h3>
+                <p>가격: ${data.price.toLocaleString()}만원</p>
+                <p>주소: ${data.address}</p>
+              </div>
+            `;
+            recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
+
+    // Initialize the app
+    updateRecentListings();
+    showSection('homeSection');
   </script>
 </body>
 </html>
