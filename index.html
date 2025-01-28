@@ -1,146 +1,118 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>부동산 PWA</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
-  <script type="module">
-    // Firebase 설정
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBX12y9KG-qBDQXTQeVxaGKjDQc_ztdWYs",
-        authDomain: "real-estate-app-7a001.firebaseapp.com",
-        databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "real-estate-app-7a001",
-        storageBucket: "real-estate-app-7a001.firebasestorage.app",
-        messagingSenderId: "229808061189",
-        appId: "1:229808061189:web:fa0835141b468b44e3556c",
-        measurementId: "G-T2X411LZ57"
-    };
-
-    // Firebase 초기화
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app); // Firebase 데이터베이스 초기화
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부동산 앱</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>부동산 매물 및 매수자 등록 PWA</h1>
-  </header>
-  <main>
-    <!-- 매물 등록 -->
-    <section>
-      <h2>매물 등록</h2>
-      <form id="매물등록폼">
-        <label for="종류">종류:</label>
-        <input type="text" id="종류" placeholder="예: 아파트">
-        <label for="가격">가격 (만원):</label>
-        <input type="number" id="가격" placeholder="예: 50000">
-        <label for="주소">주소:</label>
-        <input type="text" id="주소" placeholder="예: 서울시 종로구 새문안로 68">
-        <button type="submit">등록</button>
-      </form>
-    </section>
+    <div id="app">
+        <main class="content">
+            <!-- Screen content will be dynamically inserted here -->
+            <div id="homeScreen" class="screen active">
+                <div class="search-container">
+                    <input type="text" placeholder="매물 검색..." id="searchInput">
+                </div>
+                <div class="listings-container">
+                    <div class="listing-section">
+                        <h3>매도 매물</h3>
+                        <div class="listing-cards"></div>
+                    </div>
+                    <div class="listing-section">
+                        <h3>매수 매물</h3>
+                        <div class="listing-cards"></div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- 매수자 요청 등록 -->
-    <section>
-      <h2>매수자 요청 등록</h2>
-      <form id="매수자등록폼">
-        <label for="희망종류">희망 종류:</label>
-        <input type="text" id="희망종류" placeholder="예: 아파트">
-        <label for="최대가격">최대 가격 (만원):</label>
-        <input type="number" id="최대가격" placeholder="예: 60000">
-        <label for="희망주소">희망 주소:</label>
-        <input type="text" id="희망주소" placeholder="예: 서울시 강남구 테헤란로 456">
-        <button type="submit">등록</button>
-      </form>
-    </section>
+            <div id="mapScreen" class="screen">
+                <div id="map"></div>
+            </div>
 
-    <!-- 등록된 매물 -->
-    <section>
-      <h2>등록된 매물</h2>
-      <ul id="매물목록"></ul>
-    </section>
+            <div id="chatScreen" class="screen">
+                <div class="chat-list"></div>
+            </div>
 
-    <!-- 등록된 매수자 -->
-    <section>
-      <h2>등록된 매수자</h2>
-      <ul id="매수자목록"></ul>
-    </section>
-  </main>
-  <footer>
-    <p>© 2025 부동산 PWA</p>
-  </footer>
-  <script type="module">
-    // 매물 등록
-    document.getElementById('매물등록폼').addEventListener('submit', (e) => {
-      e.preventDefault();
+            <div id="sellScreen" class="screen">
+                <form id="sellForm" class="listing-form">
+                    <h2>매물 등록하기</h2>
+                    <select name="propertyType" required>
+                        <option value="">매물 유형 선택</option>
+                        <option value="apartment">아파트</option>
+                        <option value="villa">빌라</option>
+                        <option value="office">상가건물</option>
+                    </select>
+                    <input type="text" name="address" placeholder="도로명 주소" required>
+                    <input type="text" name="buildingName" placeholder="건물명" required>
+                    <input type="text" name="area" placeholder="전용면적" required>
+                    <input type="number" name="price" placeholder="희망 매도 가격" required>
+                    <textarea name="description" placeholder="상세 내용" required></textarea>
+                    <button type="submit">등록하기</button>
+                </form>
+            </div>
 
-      const 종류 = document.getElementById('종류').value;
-      const 가격 = parseInt(document.getElementById('가격').value, 10);
-      const 주소 = document.getElementById('주소').value;
+            <div id="buyScreen" class="screen">
+                <form id="buyForm" class="listing-form">
+                    <h2>매수 등록하기</h2>
+                    <select name="propertyType" required>
+                        <option value="">매물 유형 선택</option>
+                        <option value="apartment">아파트</option>
+                        <option value="villa">빌라</option>
+                        <option value="office">상가건물</option>
+                    </select>
+                    <input type="text" name="address" placeholder="도로명 주소" required>
+                    <input type="text" name="buildingName" placeholder="건물명" required>
+                    <input type="text" name="area" placeholder="전용면적" required>
+                    <input type="number" name="price" placeholder="희망 매수 가격" required>
+                    <textarea name="description" placeholder="상세 내용" required></textarea>
+                    <button type="submit">등록하기</button>
+                </form>
+            </div>
 
-      const 매물Ref = ref(db, '매물');
-      push(매물Ref, { 종류, 가격, 주소 })
-        .then(() => {
-          alert('매물이 성공적으로 등록되었습니다!');
-          document.getElementById('매물등록폼').reset();
-        })
-        .catch((error) => console.error('데이터 저장 오류:', error));
-    });
+            <div id="bulletinScreen" class="screen">
+                <div class="filter-container">
+                    <input type="text" placeholder="지역으로 검색..." id="locationSearch">
+                    <div class="region-filters">
+                        <select id="cityFilter">
+                            <option value="">전체 시/도</option>
+                        </select>
+                        <select id="districtFilter">
+                            <option value="">전체 구/군</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bulletin-list"></div>
+            </div>
+        </main>
 
-    // 매물 데이터 읽기
-    const 매물Ref = ref(db, '매물');
-    onValue(매물Ref, (snapshot) => {
-      const data = snapshot.val();
-      const 매물목록 = document.getElementById('매물목록');
-      매물목록.innerHTML = ''; // 기존 목록 초기화
-
-      if (data) {
-        Object.values(data).forEach((item) => {
-          const listItem = document.createElement('li');
-          listItem.textContent = `${item.종류} - ${item.가격}만원 - ${item.주소}`;
-          매물목록.appendChild(listItem);
-        });
-      }
-    });
-
-    // 매수자 등록
-    document.getElementById('매수자등록폼').addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const 희망종류 = document.getElementById('희망종류').value;
-      const 최대가격 = parseInt(document.getElementById('최대가격').value, 10);
-      const 희망주소 = document.getElementById('희망주소').value;
-
-      const 매수자Ref = ref(db, '매수자');
-      push(매수자Ref, { 희망종류, 최대가격, 희망주소 })
-        .then(() => {
-          alert('매수자 요청이 성공적으로 등록되었습니다!');
-          document.getElementById('매수자등록폼').reset();
-        })
-        .catch((error) => console.error('데이터 저장 오류:', error));
-    });
-
-    // 매수자 데이터 읽기
-    const 매수자Ref = ref(db, '매수자');
-    onValue(매수자Ref, (snapshot) => {
-      const data = snapshot.val();
-      const 매수자목록 = document.getElementById('매수자목록');
-      매수자목록.innerHTML = ''; // 기존 목록 초기화
-
-      if (data) {
-        Object.values(data).forEach((item) => {
-          const listItem = document.createElement('li');
-          listItem.textContent = `${item.희망종류} - 최대 ${item.최대가격}만원 - ${item.희망주소}`;
-          매수자목록.appendChild(listItem);
-        });
-      }
-    });
-  </script>
+        <nav class="bottom-nav">
+            <button data-screen="home" class="nav-btn active">
+                <svg class="home-icon"></svg>
+                <span>홈</span>
+            </button>
+            <button data-screen="map" class="nav-btn">
+                <svg class="map-icon"></svg>
+                <span>지도</span>
+            </button>
+            <button data-screen="chat" class="nav-btn">
+                <svg class="chat-icon"></svg>
+                <span>채팅</span>
+            </button>
+            <button data-screen="sell" class="nav-btn">
+                <svg class="sell-icon"></svg>
+                <span>매도</span>
+            </button>
+            <button data-screen="buy" class="nav-btn">
+                <svg class="buy-icon"></svg>
+                <span>매수</span>
+            </button>
+            <button data-screen="bulletin" class="nav-btn">
+                <svg class="bulletin-icon"></svg>
+                <span>게시판</span>
+            </button>
+        </nav>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>
