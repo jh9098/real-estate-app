@@ -67,6 +67,14 @@
     section {
       margin-bottom: 30px;
     }
+
+    /* 스타일 추가 */
+    #roadview {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
   </style>
 </head>
 
@@ -123,6 +131,8 @@
 
   <section id="mapSection" style="display: none;">
     <div id="map"></div>
+    <!-- 로드뷰를 위한 공간 -->
+    <div id="roadview"></div>
   </section>
 
   <!-- Firebase SDK (Modular) -->
@@ -188,17 +198,19 @@
     // Roadview initialization
     let roadview = null;
     function initRoadview(latlng) {
+      // 로드뷰 설정
       if (!roadview) {
-        roadview = new naver.maps.Roadview('map'); // 수정된 부분: 기존 지도에 로드뷰 초기화
-        const rvClient = new naver.maps.RoadviewClient();
-        const location = latlng || new naver.maps.LatLng(37.5665, 126.9780); // 클릭된 위치 또는 서울을 기본으로
-        roadview.setViewpoint(location);
-        rvClient.getNearestPanoId(location, function (panoId) {
-          if (panoId) {
-            roadview.setPanoId(panoId, location);
-          }
-        });
+        roadview = new naver.maps.Roadview('roadview');
       }
+
+      const rvClient = new naver.maps.RoadviewClient();
+      const location = latlng || new naver.maps.LatLng(37.5665, 126.9780); // 클릭된 위치 또는 서울을 기본으로
+      roadview.setViewpoint(location);
+      rvClient.getNearestPanoId(location, function (panoId) {
+        if (panoId) {
+          roadview.setPanoId(panoId, location);
+        }
+      });
     }
 
     // Form handlers
