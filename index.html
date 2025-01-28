@@ -4,18 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>부동산 PWA</title>
-  
+
+  <!-- Naver Maps API Script (Place this above your custom JavaScript) -->
+  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y" charset="utf-8"></script>
+
   <style>
-    /* Basic styles */
+    /* Basic styles to get started */
     body {
       margin: 0;
       padding: 20px;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
+
     header {
       text-align: center;
       margin-bottom: 20px;
     }
+
     #navbar {
       display: flex;
       justify-content: space-around;
@@ -23,6 +28,7 @@
       padding: 10px;
       background-color: #f0f0f0;
     }
+
     button {
       padding: 10px 20px;
       border: none;
@@ -31,177 +37,36 @@
       color: white;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #0056b3;
     }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
     #map {
       width: 100%;
       height: 400px;
       margin-top: 20px;
       border: 1px solid #ddd;
     }
+
     section {
       margin-bottom: 30px;
     }
   </style>
-
-  <!-- Naver Maps API Script -->
-  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y"></script>
-
-  <!-- Firebase SDK (Modular) -->
-  <script type="module">
-    document.addEventListener("DOMContentLoaded", function() {
-        // Firebase 및 기타 초기화
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-        import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
-
-        // Firebase 설정
-        const firebaseConfig = {
-            apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
-            authDomain: "real-estate-app-7a001.firebaseapp.com",
-            databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "real-estate-app-7a001",
-            storageBucket: "real-estate-app-7a001.appspot.com",
-            messagingSenderId: "229808061189",
-            appId: "1:229808061189:web:fa083511b468b44e3556c"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        const sections = {
-            homeSection: document.getElementById('homeSection'),
-            sellSection: document.getElementById('sellSection'),
-            buySection: document.getElementById('buySection'),
-            mapSection: document.getElementById('mapSection')
-        };
-
-        function showSection(sectionId) {
-            console.log("Section switch triggered");
-            Object.entries(sections).forEach(([id, element]) => {
-                element.style.display = id === sectionId ? 'block' : 'none';
-            });
-            if (sectionId === 'mapSection') {
-                initMap();
-            }
-        }
-
-        // 버튼 클릭 시 콘솔 찍기
-        document.getElementById('homeBtn').addEventListener('click', () => {
-            console.log("Home button clicked");
-            showSection('homeSection');
-        });
-        document.getElementById('mapBtn').addEventListener('click', () => {
-            console.log("Map button clicked");
-            showSection('mapSection');
-        });
-        document.getElementById('sellBtn').addEventListener('click', () => {
-            console.log("Sell button clicked");
-            showSection('sellSection');
-        });
-        document.getElementById('buyBtn').addEventListener('click', () => {
-            console.log("Buy button clicked");
-            showSection('buySection');
-        });
-
-        let map = null;
-        function initMap() {
-            console.log("Map initialization started");
-            if (!map) {
-                map = new naver.maps.Map('map', {
-                    center: new naver.maps.LatLng(37.5665, 126.9780),
-                    zoom: 12
-                });
-            }
-        }
-
-      // Navigation
-      document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
-      document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
-      document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
-      document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
-
-      // Map initialization
-      let map = null;
-      function initMap() {
-        if (!map) {
-          map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
-            zoom: 12
-          });
-        }
-      }
-
-      // Form handlers
-      document.getElementById('sellForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-          const data = {
-            itemType: document.getElementById('itemType').value,
-            price: parseInt(document.getElementById('price').value),
-            address: document.getElementById('address').value,
-            timestamp: Date.now()
-          };
-
-          await push(ref(db, '매물'), data);
-          alert('매물이 등록되었습니다!');
-          e.target.reset();
-          showSection('homeSection');
-        } catch (error) {
-          console.error('Error posting item:', error);
-          alert('등록 중 오류가 발생했습니다.');
-        }
-      });
-
-      document.getElementById('buyForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-          const data = {
-            buyType: document.getElementById('buyType').value,
-            maxPrice: parseInt(document.getElementById('maxPrice').value),
-            buyAddress: document.getElementById('buyAddress').value,
-            timestamp: Date.now()
-          };
-
-          await push(ref(db, '매수자'), data);
-          alert('매수 요청이 등록되었습니다!');
-          e.target.reset();
-          showSection('homeSection');
-        } catch (error) {
-          console.error('Error posting buy request:', error);
-          alert('등록 중 오류가 발생했습니다.');
-        }
-      });
-
-      // Load recent listings
-      function updateRecentListings() {
-        const listingsRef = ref(db, '매물');
-        onValue(listingsRef, (snapshot) => {
-          const listings = snapshot.val();
-          const recentListingsDiv = document.getElementById('recentListings');
-          recentListingsDiv.innerHTML = '';
-
-          if (listings) {
-            Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
-              const listingDiv = document.createElement('div');
-              listingDiv.innerHTML = `
-                <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
-                  <h3>${data.itemType}</h3>
-                  <p>가격: ${data.price.toLocaleString()}만원</p>
-                  <p>주소: ${data.address}</p>
-                </div>
-              `;
-              recentListingsDiv.appendChild(listingDiv);
-            });
-          }
-        });
-      }
-
-      // Initialize the app
-      updateRecentListings();
-      showSection('homeSection');
-    });
-  </script>
 </head>
 <body>
   <header>
@@ -257,5 +122,132 @@
   <section id="mapSection" style="display: none;">
     <div id="map"></div>
   </section>
+
+  <!-- Firebase SDK (Modular) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+      authDomain: "real-estate-app-7a001.firebaseapp.com",
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "real-estate-app-7a001",
+      storageBucket: "real-estate-app-7a001.appspot.com",
+      messagingSenderId: "229808061189",
+      appId: "1:229808061189:web:fa083511b468b44e3556c"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Section management
+    const sections = {
+      homeSection: document.getElementById('homeSection'),
+      sellSection: document.getElementById('sellSection'),
+      buySection: document.getElementById('buySection'),
+      mapSection: document.getElementById('mapSection')
+    };
+
+    function showSection(sectionId) {
+      Object.entries(sections).forEach(([id, element]) => {
+        element.style.display = id === sectionId ? 'block' : 'none';
+      });
+      if (sectionId === 'mapSection') {
+        initMap();
+      }
+    }
+
+    // Navigation
+    document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
+    document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
+    document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
+    document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
+
+    // Map initialization
+    let map = null;
+    function initMap() {
+      if (!map) {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
+          zoom: 12
+        });
+      }
+    }
+
+    // Form handlers
+    document.getElementById('sellForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const data = {
+          itemType: document.getElementById('itemType').value,
+          price: parseInt(document.getElementById('price').value),
+          address: document.getElementById('address').value,
+          timestamp: Date.now()
+        };
+        
+        await push(ref(db, '매물'), data);
+        alert('매물이 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      } catch (error) {
+        console.error('Error posting item:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
+    });
+
+    document.getElementById('buyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const data = {
+          buyType: document.getElementById('buyType').value,
+          maxPrice: parseInt(document.getElementById('maxPrice').value),
+          buyAddress: document.getElementById('buyAddress').value,
+          timestamp: Date.now()
+        };
+        
+        await push(ref(db, '매수자'), data);
+        alert('매수 요청이 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      } catch (error) {
+        console.error('Error posting buy request:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
+    });
+
+    // Load recent listings
+    function updateRecentListings() {
+      const listingsRef = ref(db, '매물');
+      onValue(listingsRef, (snapshot) => {
+        const listings = snapshot.val();
+        const recentListingsDiv = document.getElementById('recentListings');
+        recentListingsDiv.innerHTML = '';
+        
+        if (listings) {
+          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
+            const listingDiv = document.createElement('div');
+            // Check for undefined and format
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.innerHTML = ` 
+              <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <h3>${data.itemType}</h3>
+                <p>가격: ${formattedPrice}만원</p>
+                <p>주소: ${data.address}</p>
+              </div>
+            `;
+            recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
+
+    // Initialize the app
+    updateRecentListings();
+    showSection('homeSection');
+  </script>
 </body>
 </html>
