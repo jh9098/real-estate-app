@@ -50,41 +50,70 @@
 
   <!-- Firebase SDK (Modular) -->
   <script type="module">
-    window.onload = function() {
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-      import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    document.addEventListener("DOMContentLoaded", function() {
+        // Firebase 및 기타 초기화
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+        import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-      // Firebase Configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
-        authDomain: "real-estate-app-7a001.firebaseapp.com",
-        databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "real-estate-app-7a001",
-        storageBucket: "real-estate-app-7a001.appspot.com",
-        messagingSenderId: "229808061189",
-        appId: "1:229808061189:web:fa083511b468b44e3556c"
-      };
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+            authDomain: "real-estate-app-7a001.firebaseapp.com",
+            databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "real-estate-app-7a001",
+            storageBucket: "real-estate-app-7a001.appspot.com",
+            messagingSenderId: "229808061189",
+            appId: "1:229808061189:web:fa083511b468b44e3556c"
+        };
 
-      // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-      // Section management
-      const sections = {
-        homeSection: document.getElementById('homeSection'),
-        sellSection: document.getElementById('sellSection'),
-        buySection: document.getElementById('buySection'),
-        mapSection: document.getElementById('mapSection')
-      };
+        const sections = {
+            homeSection: document.getElementById('homeSection'),
+            sellSection: document.getElementById('sellSection'),
+            buySection: document.getElementById('buySection'),
+            mapSection: document.getElementById('mapSection')
+        };
 
-      function showSection(sectionId) {
-        Object.entries(sections).forEach(([id, element]) => {
-          element.style.display = id === sectionId ? 'block' : 'none';
-        });
-        if (sectionId === 'mapSection') {
-          initMap();
+        function showSection(sectionId) {
+            console.log("Section switch triggered");
+            Object.entries(sections).forEach(([id, element]) => {
+                element.style.display = id === sectionId ? 'block' : 'none';
+            });
+            if (sectionId === 'mapSection') {
+                initMap();
+            }
         }
-      }
+
+        // 버튼 클릭 시 콘솔 찍기
+        document.getElementById('homeBtn').addEventListener('click', () => {
+            console.log("Home button clicked");
+            showSection('homeSection');
+        });
+        document.getElementById('mapBtn').addEventListener('click', () => {
+            console.log("Map button clicked");
+            showSection('mapSection');
+        });
+        document.getElementById('sellBtn').addEventListener('click', () => {
+            console.log("Sell button clicked");
+            showSection('sellSection');
+        });
+        document.getElementById('buyBtn').addEventListener('click', () => {
+            console.log("Buy button clicked");
+            showSection('buySection');
+        });
+
+        let map = null;
+        function initMap() {
+            console.log("Map initialization started");
+            if (!map) {
+                map = new naver.maps.Map('map', {
+                    center: new naver.maps.LatLng(37.5665, 126.9780),
+                    zoom: 12
+                });
+            }
+        }
 
       // Navigation
       document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
@@ -171,7 +200,7 @@
       // Initialize the app
       updateRecentListings();
       showSection('homeSection');
-    };
+    });
   </script>
 </head>
 <body>
