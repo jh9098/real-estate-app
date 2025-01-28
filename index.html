@@ -1,118 +1,195 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부동산 앱</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부동산 PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    // Firebase SDK import
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBX12y9KG-qBDQXTQeVxaGKjDQc_ztdWYs",
+        authDomain: "real-estate-app-7a001.firebaseapp.com",
+        databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "real-estate-app-7a001",
+        storageBucket: "real-estate-app-7a001.firebasestorage.app",
+        messagingSenderId: "229808061189",
+        appId: "1:229808061189:web:fa0835141b468b44e3556c",
+        measurementId: "G-T2X411LZ57"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+  </script>
 </head>
 <body>
-    <div id="app">
-        <main class="content">
-            <!-- Screen content will be dynamically inserted here -->
-            <div id="homeScreen" class="screen active">
-                <div class="search-container">
-                    <input type="text" placeholder="매물 검색..." id="searchInput">
-                </div>
-                <div class="listings-container">
-                    <div class="listing-section">
-                        <h3>매도 매물</h3>
-                        <div class="listing-cards"></div>
-                    </div>
-                    <div class="listing-section">
-                        <h3>매수 매물</h3>
-                        <div class="listing-cards"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mapScreen" class="screen">
-                <div id="map"></div>
-            </div>
-
-            <div id="chatScreen" class="screen">
-                <div class="chat-list"></div>
-            </div>
-
-            <div id="sellScreen" class="screen">
-                <form id="sellForm" class="listing-form">
-                    <h2>매물 등록하기</h2>
-                    <select name="propertyType" required>
-                        <option value="">매물 유형 선택</option>
-                        <option value="apartment">아파트</option>
-                        <option value="villa">빌라</option>
-                        <option value="office">상가건물</option>
-                    </select>
-                    <input type="text" name="address" placeholder="도로명 주소" required>
-                    <input type="text" name="buildingName" placeholder="건물명" required>
-                    <input type="text" name="area" placeholder="전용면적" required>
-                    <input type="number" name="price" placeholder="희망 매도 가격" required>
-                    <textarea name="description" placeholder="상세 내용" required></textarea>
-                    <button type="submit">등록하기</button>
-                </form>
-            </div>
-
-            <div id="buyScreen" class="screen">
-                <form id="buyForm" class="listing-form">
-                    <h2>매수 등록하기</h2>
-                    <select name="propertyType" required>
-                        <option value="">매물 유형 선택</option>
-                        <option value="apartment">아파트</option>
-                        <option value="villa">빌라</option>
-                        <option value="office">상가건물</option>
-                    </select>
-                    <input type="text" name="address" placeholder="도로명 주소" required>
-                    <input type="text" name="buildingName" placeholder="건물명" required>
-                    <input type="text" name="area" placeholder="전용면적" required>
-                    <input type="number" name="price" placeholder="희망 매수 가격" required>
-                    <textarea name="description" placeholder="상세 내용" required></textarea>
-                    <button type="submit">등록하기</button>
-                </form>
-            </div>
-
-            <div id="bulletinScreen" class="screen">
-                <div class="filter-container">
-                    <input type="text" placeholder="지역으로 검색..." id="locationSearch">
-                    <div class="region-filters">
-                        <select id="cityFilter">
-                            <option value="">전체 시/도</option>
-                        </select>
-                        <select id="districtFilter">
-                            <option value="">전체 구/군</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="bulletin-list"></div>
-            </div>
-        </main>
-
-        <nav class="bottom-nav">
-            <button data-screen="home" class="nav-btn active">
-                <svg class="home-icon"></svg>
-                <span>홈</span>
-            </button>
-            <button data-screen="map" class="nav-btn">
-                <svg class="map-icon"></svg>
-                <span>지도</span>
-            </button>
-            <button data-screen="chat" class="nav-btn">
-                <svg class="chat-icon"></svg>
-                <span>채팅</span>
-            </button>
-            <button data-screen="sell" class="nav-btn">
-                <svg class="sell-icon"></svg>
-                <span>매도</span>
-            </button>
-            <button data-screen="buy" class="nav-btn">
-                <svg class="buy-icon"></svg>
-                <span>매수</span>
-            </button>
-            <button data-screen="bulletin" class="nav-btn">
-                <svg class="bulletin-icon"></svg>
-                <span>게시판</span>
-            </button>
-        </nav>
+  <header>
+    <h1>부동산 매물 및 매수자 등록 PWA</h1>
+  </header>
+  <main>
+    <!-- Navbar with buttons -->
+    <div id="navbar">
+      <button id="homeBtn">🏠 Home</button>
+      <button id="mapBtn">🗺️ Map</button>
+      <button id="chatBtn">💬 Chat</button>
+      <button id="sellBtn">🛒 Sell</button>
+      <button id="buyBtn">💰 Buy</button>
     </div>
-    <script src="app.js"></script>
+
+    <!-- Home Section -->
+    <section id="homeSection">
+      <h2>매물 등록</h2>
+      <form id="매물등록폼">
+        <label for="종류">종류:</label>
+        <input type="text" id="종류" placeholder="예: 아파트">
+        <label for="가격">가격 (만원):</label>
+        <input type="number" id="가격" placeholder="예: 50000">
+        <label for="주소">주소:</label>
+        <input type="text" id="주소" placeholder="예: 서울시 종로구 새문안로 68">
+        <button type="submit">등록</button>
+      </form>
+    </section>
+
+    <!-- Sell Section -->
+    <section id="sellSection">
+      <h2>Sell Property</h2>
+      <form id="sellForm">
+        <label for="itemType">Item Type:</label>
+        <input type="text" id="itemType" placeholder="E.g. Apartment">
+        <label for="price">Price (만원):</label>
+        <input type="number" id="price" placeholder="E.g. 50000">
+        <label for="address">Address:</label>
+        <input type="text" id="address" placeholder="E.g. 서울시 강남구 테헤란로 456">
+        <button type="submit">Register</button>
+      </form>
+    </section>
+
+    <!-- Buy Section -->
+    <section id="buySection">
+      <h2>Buy Property</h2>
+      <form id="buyForm">
+        <label for="buyType">Item Type:</label>
+        <input type="text" id="buyType" placeholder="E.g. Apartment">
+        <label for="maxPrice">Max Price (만원):</label>
+        <input type="number" id="maxPrice" placeholder="E.g. 60000">
+        <label for="buyAddress">Preferred Address:</label>
+        <input type="text" id="buyAddress" placeholder="E.g. 서울시 강남구 테헤란로 456">
+        <button type="submit">Register</button>
+      </form>
+    </section>
+
+    <!-- Map Section (Google Map) -->
+    <section id="mapSection">
+      <div id="map" style="height: 400px;"></div>
+    </section>
+
+    <!-- Chat Section -->
+    <section id="chatSection">
+      <h2>Chat</h2>
+      <div id="chatList"></div>
+    </section>
+
+    <!-- Display Posts -->
+    <section id="postsSection">
+      <h2>등록된 매물</h2>
+      <ul id="매물목록"></ul>
+      <h2>등록된 매수자</h2>
+      <ul id="매수자목록"></ul>
+    </section>
+  </main>
+  <footer>
+    <p>© 2025 부동산 PWA</p>
+  </footer>
+  <script type="module">
+    // Firebase Logic for submitting forms
+    document.getElementById('sellForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const itemType = document.getElementById('itemType').value;
+      const price = document.getElementById('price').value;
+      const address = document.getElementById('address').value;
+
+      const sellRef = ref(db, '매물');
+      push(sellRef, { itemType, price, address })
+        .then(() => {
+          alert('Item successfully posted for sale!');
+          document.getElementById('sellForm').reset();
+        })
+        .catch((error) => console.error('Error posting item for sale:', error));
+    });
+
+    document.getElementById('buyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const buyType = document.getElementById('buyType').value;
+      const maxPrice = document.getElementById('maxPrice').value;
+      const buyAddress = document.getElementById('buyAddress').value;
+
+      const buyRef = ref(db, '매수자');
+      push(buyRef, { buyType, maxPrice, buyAddress })
+        .then(() => {
+          alert('Buy request successfully posted!');
+          document.getElementById('buyForm').reset();
+        })
+        .catch((error) => console.error('Error posting buy request:', error));
+    });
+
+    // Fetch and Display Posts
+    const 매물Ref = ref(db, '매물');
+    onValue(매물Ref, (snapshot) => {
+      const data = snapshot.val();
+      const 매물목록 = document.getElementById('매물목록');
+      매물목록.innerHTML = ''; // Clear the list before adding new posts
+
+      if (data) {
+        Object.values(data).forEach((item) => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${item.itemType} - ${item.price}만원 - ${item.address}`;
+          매물목록.appendChild(listItem);
+        });
+      }
+    });
+
+    const 매수자Ref = ref(db, '매수자');
+    onValue(매수자Ref, (snapshot) => {
+      const data = snapshot.val();
+      const 매수자목록 = document.getElementById('매수자목록');
+      매수자목록.innerHTML = ''; // Clear the list before adding new posts
+
+      if (data) {
+        Object.values(data).forEach((item) => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${item.buyType} - 최대 ${item.maxPrice}만원 - ${item.buyAddress}`;
+          매수자목록.appendChild(listItem);
+        });
+      }
+    });
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
+  <script type="module">
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 37.5665, lng: 126.9780 }, // Default to Seoul
+        zoom: 12,
+      });
+
+      // Add markers (example)
+      const posts = [
+        { lat: 37.5665, lng: 126.9780, title: 'Post 1' }, // Example coordinates
+      ];
+
+      posts.forEach(post => {
+        new google.maps.Marker({
+          position: { lat: post.lat, lng: post.lng },
+          map,
+          title: post.title,
+        });
+      });
+    }
+  </script>
 </body>
 </html>
