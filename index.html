@@ -64,18 +64,10 @@
       border: 1px solid #ddd;
     }
 
-    #roadview {
-      width: 100%;
-      height: 400px;
-      margin-top: 20px;
-      border: 1px solid #ddd;
-    }
-
     section {
       margin-bottom: 30px;
     }
   </style>
-
 </head>
 
 <body>
@@ -86,7 +78,6 @@
   <div id="navbar">
     <button id="homeBtn">🏠 홈</button>
     <button id="mapBtn">🗺️ 지도</button>
-    <button id="roadviewBtn">🚗 로드뷰</button> <!-- 로드뷰 버튼 추가 -->
     <button id="sellBtn">🏢 매물등록</button>
     <button id="buyBtn">🔍 매수등록</button>
   </div>
@@ -132,7 +123,6 @@
 
   <section id="mapSection" style="display: none;">
     <div id="map"></div>
-    <div id="roadview"></div> <!-- 로드뷰 추가 -->
   </section>
 
   <!-- Firebase SDK (Modular) -->
@@ -186,30 +176,30 @@
           center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
           zoom: 12
         });
+
+        // 지도 클릭 시 로드뷰 활성화
+        naver.maps.Event.addListener(map, 'click', function (e) {
+          const latlng = e.coord;
+          initRoadview(latlng);
+        });
       }
     }
 
     // Roadview initialization
     let roadview = null;
-    function initRoadview() {
+    function initRoadview(latlng) {
       if (!roadview) {
-        roadview = new naver.maps.Roadview('roadview'); // 수정된 부분: 'new' 키워드 제거
+        roadview = new naver.maps.Roadview('map'); // 수정된 부분: 기존 지도에 로드뷰 초기화
         const rvClient = new naver.maps.RoadviewClient();
-        const location = new naver.maps.LatLng(37.5665, 126.9780); // 서울 중심으로 로드뷰 초기화
+        const location = latlng || new naver.maps.LatLng(37.5665, 126.9780); // 클릭된 위치 또는 서울을 기본으로
         roadview.setViewpoint(location);
-        rvClient.getNearestPanoId(location, function(panoId) {
+        rvClient.getNearestPanoId(location, function (panoId) {
           if (panoId) {
             roadview.setPanoId(panoId, location);
           }
         });
       }
     }
-
-    // 로드뷰 버튼 클릭 시 로드뷰 초기화
-    document.getElementById('roadviewBtn').addEventListener('click', function () {
-      showSection('mapSection');
-      initRoadview();
-    });
 
     // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
@@ -283,7 +273,6 @@
     updateRecentListings();
     showSection('homeSection');
   </script>
-
 </body>
 
 </html>
