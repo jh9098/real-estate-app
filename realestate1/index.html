@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부동산 앱</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <main class="content">
+            <!-- Screen content will be dynamically inserted here -->
+            <div id="homeScreen" class="screen active">
+                <div class="search-container">
+                    <input type="text" placeholder="매물 검색..." id="searchInput">
+                </div>
+                <div class="listings-container">
+                    <div class="listing-section">
+                        <h3>매도 매물</h3>
+                        <div class="listing-cards"></div>
+                    </div>
+                    <div class="listing-section">
+                        <h3>매수 매물</h3>
+                        <div class="listing-cards"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mapScreen" class="screen">
+                <div id="map"></div>
+            </div>
+
+            <div id="chatScreen" class="screen">
+                <div class="chat-list"></div>
+            </div>
+
+            <div id="sellScreen" class="screen">
+                <form id="sellForm" class="listing-form">
+                    <h2>매물 등록하기</h2>
+                    <select name="propertyType" required>
+                        <option value="">매물 유형 선택</option>
+                        <option value="apartment">아파트</option>
+                        <option value="villa">빌라</option>
+                        <option value="office">상가건물</option>
+                    </select>
+                    <input type="text" name="address" placeholder="도로명 주소" required>
+                    <input type="text" name="buildingName" placeholder="건물명" required>
+                    <input type="text" name="area" placeholder="전용면적" required>
+                    <input type="number" name="price" placeholder="희망 매도 가격" required>
+                    <textarea name="description" placeholder="상세 내용" required></textarea>
+                    <button type="submit">등록하기</button>
+                </form>
+            </div>
+
+            <div id="buyScreen" class="screen">
+                <form id="buyForm" class="listing-form">
+                    <h2>매수 등록하기</h2>
+                    <select name="propertyType" required>
+                        <option value="">매물 유형 선택</option>
+                        <option value="apartment">아파트</option>
+                        <option value="villa">빌라</option>
+                        <option value="office">상가건물</option>
+                    </select>
+                    <input type="text" name="address" placeholder="도로명 주소" required>
+                    <input type="text" name="buildingName" placeholder="건물명" required>
+                    <input type="text" name="area" placeholder="전용면적" required>
+                    <input type="number" name="price" placeholder="희망 매수 가격" required>
+                    <textarea name="description" placeholder="상세 내용" required></textarea>
+                    <button type="submit">등록하기</button>
+                </form>
+            </div>
+
+            <div id="bulletinScreen" class="screen">
+                <div class="filter-container">
+                    <input type="text" placeholder="지역으로 검색..." id="locationSearch">
+                    <div class="region-filters">
+                        <select id="cityFilter">
+                            <option value="">전체 시/도</option>
+                        </select>
+                        <select id="districtFilter">
+                            <option value="">전체 구/군</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bulletin-list"></div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <button data-screen="home" class="nav-btn active">
+                <svg class="home-icon"></svg>
+                <span>홈</span>
+            </button>
+            <button data-screen="map" class="nav-btn">
+                <svg class="map-icon"></svg>
+                <span>지도</span>
+            </button>
+            <button data-screen="chat" class="nav-btn">
+                <svg class="chat-icon"></svg>
+                <span>채팅</span>
+            </button>
+            <button data-screen="sell" class="nav-btn">
+                <svg class="sell-icon"></svg>
+                <span>매도</span>
+            </button>
+            <button data-screen="buy" class="nav-btn">
+                <svg class="buy-icon"></svg>
+                <span>매수</span>
+            </button>
+            <button data-screen="bulletin" class="nav-btn">
+                <svg class="bulletin-icon"></svg>
+                <span>게시판</span>
+            </button>
+        </nav>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
