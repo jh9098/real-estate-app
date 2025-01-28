@@ -6,11 +6,15 @@
   <title>부동산 PWA</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-  <script type="module">
-    // Firebase SDK imports
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
+  <!-- Naver Maps API Script (Ensure it's loaded before any other code) -->
+  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+
+  <script>
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
@@ -25,43 +29,44 @@
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    // Event listeners for button actions
+    // Event Listeners for button actions
     document.getElementById('homeBtn').addEventListener('click', () => {
       console.log("Home button clicked");
-      // Code to show posts or navigate
+      // Handle home button logic
     });
 
     document.getElementById('mapBtn').addEventListener('click', () => {
       console.log("Map button clicked");
-      initMap(); // Initialize Naver Map
+      initMap(); // Initialize Naver Map when the Map button is clicked
     });
 
     document.getElementById('chatBtn').addEventListener('click', () => {
       console.log("Chat button clicked");
-      // Code to display chat
+      // Handle chat button logic
     });
 
     document.getElementById('sellBtn').addEventListener('click', () => {
       console.log("Sell button clicked");
-      // Code to show sell form
+      // Handle sell button logic
     });
 
     document.getElementById('buyBtn').addEventListener('click', () => {
       console.log("Buy button clicked");
-      // Code to show buy form
+      // Handle buy button logic
     });
 
-    // Naver Maps Initialization
+    // Naver Map Initialization
     function initMap() {
+      console.log('Initializing Naver Map...');
       var map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(37.5665, 126.9780), // Default to Seoul
         zoom: 12
       });
 
-      // Example posts and their locations on map
+      // Example data for markers
       const posts = [
         { lat: 37.5665, lng: 126.9780, title: 'Post 1' }
       ];
@@ -75,9 +80,6 @@
       });
     }
   </script>
-  <!-- Naver Maps API with your API key -->
-  <script type="text/javascript" src="https://openapi.naver.com/openapi/v3/maps.js?clientId=g1751tw37y"></script>
-
 </head>
 <body>
   <header>
@@ -106,58 +108,16 @@
     </form>
   </section>
 
-  <!-- Sell Section -->
-  <section id="sellSection">
-    <h2>Sell Property</h2>
-    <form id="sellForm">
-      <label for="itemType">Item Type:</label>
-      <input type="text" id="itemType" placeholder="E.g. Apartment">
-      <label for="price">Price (만원):</label>
-      <input type="number" id="price" placeholder="E.g. 50000">
-      <label for="address">Address:</label>
-      <input type="text" id="address" placeholder="E.g. 서울시 강남구 테헤란로 456">
-      <button type="submit">Register</button>
-    </form>
-  </section>
-
-  <!-- Buy Section -->
-  <section id="buySection">
-    <h2>Buy Property</h2>
-    <form id="buyForm">
-      <label for="buyType">Item Type:</label>
-      <input type="text" id="buyType" placeholder="E.g. Apartment">
-      <label for="maxPrice">Max Price (만원):</label>
-      <input type="number" id="maxPrice" placeholder="E.g. 60000">
-      <label for="buyAddress">Preferred Address:</label>
-      <input type="text" id="buyAddress" placeholder="E.g. 서울시 강남구 테헤란로 456">
-      <button type="submit">Register</button>
-    </form>
-  </section>
-
   <!-- Map Section -->
   <section id="mapSection">
     <div id="map" style="height: 400px;"></div>
-  </section>
-
-  <!-- Chat Section -->
-  <section id="chatSection">
-    <h2>Chat</h2>
-    <div id="chatList"></div>
-  </section>
-
-  <!-- Display Posts -->
-  <section id="postsSection">
-    <h2>등록된 매물</h2>
-    <ul id="매물목록"></ul>
-    <h2>등록된 매수자</h2>
-    <ul id="매수자목록"></ul>
   </section>
 
   <footer>
     <p>© 2025 부동산 PWA</p>
   </footer>
 
-  <script type="module">
+  <script>
     // Firebase Logic for submitting forms
     document.getElementById('sellForm').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -165,7 +125,7 @@
       const price = document.getElementById('price').value;
       const address = document.getElementById('address').value;
 
-      const sellRef = ref(db, '매물');
+      const sellRef = db.ref('매물');
       push(sellRef, { itemType, price, address })
         .then(() => {
           alert('Item successfully posted for sale!');
@@ -180,44 +140,13 @@
       const maxPrice = document.getElementById('maxPrice').value;
       const buyAddress = document.getElementById('buyAddress').value;
 
-      const buyRef = ref(db, '매수자');
+      const buyRef = db.ref('매수자');
       push(buyRef, { buyType, maxPrice, buyAddress })
         .then(() => {
           alert('Buy request successfully posted!');
           document.getElementById('buyForm').reset();
         })
         .catch((error) => console.error('Error posting buy request:', error));
-    });
-
-    // Fetch and Display Posts
-    const 매물Ref = ref(db, '매물');
-    onValue(매물Ref, (snapshot) => {
-      const data = snapshot.val();
-      const 매물목록 = document.getElementById('매물목록');
-      매물목록.innerHTML = ''; // Clear the list before adding new posts
-
-      if (data) {
-        Object.values(data).forEach((item) => {
-          const listItem = document.createElement('li');
-          listItem.textContent = `${item.itemType} - ${item.price}만원 - ${item.address}`;
-          매물목록.appendChild(listItem);
-        });
-      }
-    });
-
-    const 매수자Ref = ref(db, '매수자');
-    onValue(매수자Ref, (snapshot) => {
-      const data = snapshot.val();
-      const 매수자목록 = document.getElementById('매수자목록');
-      매수자목록.innerHTML = ''; // Clear the list before adding new posts
-
-      if (data) {
-        Object.values(data).forEach((item) => {
-          const listItem = document.createElement('li');
-          listItem.textContent = `${item.buyType} - 최대 ${item.maxPrice}만원 - ${item.buyAddress}`;
-          매수자목록.appendChild(listItem);
-        });
-      }
     });
   </script>
 </body>
