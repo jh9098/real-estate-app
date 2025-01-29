@@ -390,9 +390,9 @@
     }
    // 게시글 로드 함수
   function loadBoardPosts() {
-    const boardRef = ref(db, '게시판');
     const postListDiv = document.getElementById('postList');
     postListDiv.innerHTML = ''; // 기존 게시글 초기화
+    const boardRef = ref(db, '게시판');
 
     onValue(boardRef, (snapshot) => {
       const posts = snapshot.val();
@@ -423,6 +423,8 @@
           postDiv.appendChild(deleteButton);
           postListDiv.appendChild(postDiv);
         });
+      }else {
+        postListDiv.innerHTML = '<p>게시글이 없습니다.</p>';
       }
     });
   }
