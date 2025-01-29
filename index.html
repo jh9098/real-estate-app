@@ -62,6 +62,10 @@
     .delete-btn:hover {
       background-color: darkred;
     }
+
+    .filter-section {
+      margin: 20px 0;
+    }
   </style>
 </head>
 
@@ -78,9 +82,11 @@
     <button id="boardBtn">📋<br>게시판</button>
   </div>
 
-  <section id="homeSection" style="display: block;">
-    <h2>홈</h2>
-    <p>여기는 홈 화면입니다.</p>
+  <section id="homeSection">
+    <h2>최근 등록 매물</h2>
+    <div id="recentListings">
+      <!-- Recent listings will be populated here -->
+    </div>
   </section>
 
   <section id="mapSection" style="display: none;">
@@ -95,6 +101,10 @@
       <input type="text" id="itemType" placeholder="예: 아파트" required>
       <label for="price">가격:</label>
       <input type="number" id="price" placeholder="가격" required>
+      <label for="address">주소:</label>
+      <input type="text" id="address" placeholder="주소" required>
+      <label for="sellerName">작성자:</label>
+      <input type="text" id="sellerName" placeholder="작성자 이름" required>
       <button type="submit">등록</button>
     </form>
   </section>
@@ -102,33 +112,45 @@
   <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
-      <label for="buyType">매수 종류:</label>
+      <label for="buyType">찾는 종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
+      <label for="maxPrice">매수가격:</label>
+      <input type="number" id="maxPrice" placeholder="가격" required>
+      <label for="buyerName">작성자:</label>
+      <input type="text" id="buyerName" placeholder="작성자 이름" required>
       <button type="submit">등록</button>
     </form>
   </section>
 
   <section id="boardSection" style="display: none;">
     <h2>게시판</h2>
-    <div id="postList"></div>
+    <div class="filter-section">
+      <label for="postTypeFilter">매도/매수 필터:</label>
+      <select id="postTypeFilter">
+        <option value="all">전체</option>
+        <option value="sell">매도</option>
+        <option value="buy">매수</option>
+      </select>
+    </div>
+    <div id="postList">
+      <!-- 게시글 목록 -->
+    </div>
   </section>
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    import { getDatabase, ref, onValue, remove, push } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-    // Firebase 설정
     const firebaseConfig = {
-      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
-      authDomain: "real-estate-app-7a001.firebaseapp.com",
-      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "real-estate-app-7a001",
-      storageBucket: "real-estate-app-7a001.appspot.com",
-      messagingSenderId: "229808061189",
-      appId: "1:229808061189:web:fa083511b468b44e3556c"
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+      databaseURL: "YOUR_FIREBASE_DATABASE_URL",
+      projectId: "YOUR_FIREBASE_PROJECT_ID",
+      storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+      appId: "YOUR_FIREBASE_APP_ID"
     };
 
-    // Firebase 초기화
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
@@ -141,32 +163,51 @@
     };
 
     function showSection(sectionId) {
-      Object.keys(sections).forEach((key) => {
-        sections[key].style.display = key === sectionId ? 'block' : 'none';
-      });
+      Object.values(sections).forEach((section) => section.style.display = 'none');
+      sections[sectionId].style.display = 'block';
     }
 
-    // 네비게이션 버튼 이벤트 리스너
     document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
     document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
     document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection'));
 
-    // 게시글 삭제 함수
-    window.deletePost = function (postKey) {
-      const postRef = ref(db, `게시판/${postKey}`);
-      if (confirm('정말 삭제하시겠습니까?')) {
-        remove(postRef)
-          .then(() => {
-            alert('게시글이 삭제되었습니다.');
-          })
-          .catch((error) => {
-            console.error('삭제 중 오류 발생:', error);
-            alert('삭제 중 오류가 발생했습니다.');
+    // Functions for adding, deleting, and loading posts
+    function loadBoardPosts() {
+      const filter = document.getElementById('postTypeFilter').value;
+      const boardRef = ref(db, '게시판');
+      onValue(boardRef, (snapshot) => {
+        const posts = snapshot.val();
+        const postListDiv = document.getElementById('postList');
+        postListDiv.innerHTML = '';
+
+        if (posts) {
+          Object.entries(posts).forEach(([key, post]) => {
+            if (filter === 'all' || post.type === filter) {
+              const div = document.createElement('div');
+              div.innerHTML = `
+                <div class="listing">
+                  <h3>${post.itemType || post.buyType}</h3>
+                  <p>${post.price ? `가격: ${post.price}만원` : ''}</p>
+                  <p>${post.sellerName || post.buyerName}</p>
+                  <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
+                </div>`;
+              postListDiv.appendChild(div);
+            }
           });
+        }
+      });
+    }
+
+    window.deletePost = function (key) {
+      const postRef = ref(db, `게시판/${key}`);
+      if (confirm('삭제하시겠습니까?')) {
+        remove(postRef).then(() => loadBoardPosts());
       }
     };
+
+    document.getElementById('postTypeFilter').addEventListener('change', loadBoardPosts);
   </script>
 </body>
 
