@@ -75,6 +75,25 @@
       margin-bottom: 30px;
     }
 
+    .listing {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+
+    .delete-btn {
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background-color: darkred;
+    }
+
   </style>
 </head>
 
@@ -88,6 +107,7 @@
     <button id="mapBtn">🗺️<br>지도</button>
     <button id="sellBtn">🏢<br>매물</button>
     <button id="buyBtn">🔍<br>매수</button>
+    <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
   </div>
 
   <section id="homeSection">
@@ -134,10 +154,18 @@
     <div id="roadview"></div> <!-- 로드뷰를 위한 공간 -->
   </section>
 
+  <!-- 게시판 Section 추가 -->
+  <section id="boardSection" style="display: none;">
+    <h2>게시판</h2>
+    <div id="postList">
+      <!-- 게시글 목록 -->
+    </div>
+  </section>
+
   <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
     // Firebase Configuration
     const firebaseConfig = {
@@ -159,7 +187,8 @@
       homeSection: document.getElementById('homeSection'),
       sellSection: document.getElementById('sellSection'),
       buySection: document.getElementById('buySection'),
-      mapSection: document.getElementById('mapSection')
+      mapSection: document.getElementById('mapSection'),
+      boardSection: document.getElementById('boardSection') // 게시판 섹션
     };
 
     function showSection(sectionId) {
@@ -176,106 +205,86 @@
     document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
+    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection')); // 게시판 버튼 클릭
 
     // Map initialization
     let map = null;
-    let roadview = null; // 로드뷰 객체 초기화
+    let roadview = null;
 
     function initMap() {
       if (!map) {
         map = new naver.maps.Map('map', {
-          center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
+          center: new naver.maps.LatLng(37.5665, 126.9780),
           zoom: 12
         });
-
-        naver.maps.Event.addListener(map, 'click', function (e) {
-          const latlng = e.coord;
-          initRoadview(latlng);
-        });
       }
-    }
-
-    // Roadview initialization
-    function initRoadview(latlng) {
-      if (!roadview) {
-        roadview = new naver.maps.Roadview('roadview');
-      }
-
-      const rvClient = new naver.maps.RoadviewClient();
-      const location = latlng || new naver.maps.LatLng(37.5665, 126.9780); // 클릭된 위치 또는 서울을 기본으로
-      roadview.setViewpoint(location);
-      rvClient.getNearestPanoId(location, function (panoId) {
-        if (panoId) {
-          roadview.setPanoId(panoId, location);
-        }
-      });
     }
 
     // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      try {
-        const data = {
-          itemType: document.getElementById('itemType').value,
-          price: parseInt(document.getElementById('price').value),
-          address: document.getElementById('address').value,
-          timestamp: Date.now()
-        };
-
-        await push(ref(db, '매물'), data);
-        alert('매물이 등록되었습니다!');
-        e.target.reset();
-        showSection('homeSection');
-      } catch (error) {
-        console.error('Error posting item:', error);
-        alert('등록 중 오류가 발생했습니다.');
-      }
+      const data = {
+        itemType: document.getElementById('itemType').value,
+        price: parseInt(document.getElementById('price').value),
+        address: document.getElementById('address').value,
+        type: 'sell',
+        timestamp: Date.now()
+      };
+      await push(ref(db, '게시판'), data);
+      alert('매물이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
     });
 
     document.getElementById('buyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      try {
-        const data = {
-          buyType: document.getElementById('buyType').value,
-          maxPrice: parseInt(document.getElementById('maxPrice').value),
-          buyAddress: document.getElementById('buyAddress').value,
-          timestamp: Date.now()
-        };
-
-        await push(ref(db, '매수자'), data);
-        alert('매수 요청이 등록되었습니다!');
-        e.target.reset();
-        showSection('homeSection');
-      } catch (error) {
-        console.error('Error posting buy request:', error);
-        alert('등록 중 오류가 발생했습니다.');
-      }
+      const data = {
+        buyType: document.getElementById('buyType').value,
+        maxPrice: parseInt(document.getElementById('maxPrice').value),
+        buyAddress: document.getElementById('buyAddress').value,
+        type: 'buy',
+        timestamp: Date.now()
+      };
+      await push(ref(db, '게시판'), data);
+      alert('매수 요청이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
     });
 
-    // Load recent listings
+    // Load recent listings and board posts
     function updateRecentListings() {
-      const listingsRef = ref(db, '매물');
+      const listingsRef = ref(db, '게시판');
       onValue(listingsRef, (snapshot) => {
-        const listings = snapshot.val();
+        const posts = snapshot.val();
         const recentListingsDiv = document.getElementById('recentListings');
         recentListingsDiv.innerHTML = '';
 
-        if (listings) {
-          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
+        if (posts) {
+          Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
-            // Check for undefined and format
             const price = data.price;
             const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.classList.add('listing');
             listingDiv.innerHTML = `
-              <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
-                <h3>${data.itemType}</h3>
-                <p>가격: ${formattedPrice}만원</p>
-                <p>주소: ${data.address}</p>
-              </div>
+              <h3>${data.itemType || data.buyType}</h3>
+              <p>가격: ${formattedPrice}만원</p>
+              <p>주소: ${data.address || data.buyAddress}</p>
+              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
             `;
             recentListingsDiv.appendChild(listingDiv);
           });
         }
+      });
+    }
+
+    // Delete a post
+    function deletePost(postKey) {
+      const postRef = ref(db, '게시판/' + postKey);
+      remove(postRef).then(() => {
+        alert('게시글이 삭제되었습니다.');
+      }).catch((error) => {
+        console.error('게시글 삭제 실패', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
       });
     }
 
