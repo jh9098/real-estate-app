@@ -188,13 +188,13 @@
 
     // Firebase Configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
-      authDomain: "real-estate-app-7a001.firebaseapp.com",
-      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "real-estate-app-7a001",
-      storageBucket: "real-estate-app-7a001.appspot.com",
-      messagingSenderId: "229808061189",
-      appId: "1:229808061189:web:fa083511b468b44e3556c"
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs", 
+      authDomain: "real-estate-app-7a001.firebaseapp.com", 
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app", 
+      projectId: "real-estate-app-7a001", 
+      storageBucket: "real-estate-app-7a001.appspot.com", 
+      messagingSenderId: "229808061189", 
+      appId: "1:229808061189:web:fa083511b468b44e3556c" 
     };
 
     // Initialize Firebase
@@ -341,7 +341,7 @@ document.getElementById('postTypeFilter').addEventListener('change', () => {
 
     // 게시글 삭제 함수
     window.deletePost = function (postKey) {
-      const postRef = ref(db, 게시판/${postKey});
+      const postRef = ref(db, `게시판/${postKey}`);
       if (confirm('정말 삭제하시겠습니까?')) {
         remove(postRef)
           .then(() => {
