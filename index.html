@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>부동산 커뮤니케이션</title>
+  <title>부동산 PWA</title>
 
   <!-- Naver Maps API Script -->
   <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
@@ -80,15 +80,14 @@
 
 <body>
   <header>
-    <h1>부동산 커뮤니케이션</h1>
+    <h1>부동산 매물 및 매수자 등록</h1>
   </header>
 
   <div id="navbar">
-    <button id="homeBtn">🏠<br>홈</button>
-    <button id="mapBtn">🗺️<br>지도</button>
-    <button id="sellBtn">🏢<br>매도</button>
-    <button id="buyBtn">🔍<br>매수</button>
-    <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
+    <button id="homeBtn">🏠 홈</button>
+    <button id="mapBtn">🗺️ 지도</button>
+    <button id="sellBtn">🏢 매물등록</button>
+    <button id="buyBtn">🔍 매수등록</button>
   </div>
 
   <section id="homeSection">
@@ -104,7 +103,7 @@
       <label for="itemType">종류:</label>
       <input type="text" id="itemType" placeholder="예: 아파트" required>
 
-      <label for="price">매도가격 (만원):</label>
+      <label for="price">가격 (만원):</label>
       <input type="number" id="price" placeholder="예: 50000" required>
 
       <label for="address">주소:</label>
@@ -117,14 +116,14 @@
   <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
-      <label for="buyType">종류:</label>
+      <label for="buyType">찾는 매물 종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
 
-      <label for="maxPrice">매수가격 (만원):</label>
+      <label for="maxPrice">희망 최대가격 (만원):</label>
       <input type="number" id="maxPrice" placeholder="예: 50000" required>
 
-      <label for="buyAddress">주소:</label>
-      <input type="text" id="buyAddress" placeholder="예: 서울시 종로구 새문안로68" required>
+      <label for="buyAddress">희망 지역:</label>
+      <input type="text" id="buyAddress" placeholder="예: 서울시 종로구" required>
 
       <button type="submit">등록하기</button>
     </form>
@@ -135,17 +134,10 @@
     <div id="roadview"></div> <!-- 로드뷰를 위한 공간 -->
   </section>
 
-  <section id="boardSection" style="display: none;">
-    <h2>게시판</h2>
-    <div id="boardList">
-      <!-- 게시판 내용이 여기에 표시됩니다. -->
-    </div>
-  </section>
-
   <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
     // Firebase Configuration
     const firebaseConfig = {
@@ -167,8 +159,7 @@
       homeSection: document.getElementById('homeSection'),
       sellSection: document.getElementById('sellSection'),
       buySection: document.getElementById('buySection'),
-      mapSection: document.getElementById('mapSection'),
-      boardSection: document.getElementById('boardSection')
+      mapSection: document.getElementById('mapSection')
     };
 
     function showSection(sectionId) {
@@ -178,9 +169,6 @@
       if (sectionId === 'mapSection') {
         initMap();
       }
-      if (sectionId === 'boardSection') {
-        loadBoard();
-      }
     }
 
     // Navigation
@@ -188,22 +176,54 @@
     document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
-    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection')); // 게시판 버튼 추가
+
+    // Map initialization
+    let map = null;
+    let roadview = null; // 로드뷰 객체 초기화
+
+    function initMap() {
+      if (!map) {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780), // Seoul
+          zoom: 12
+        });
+
+        naver.maps.Event.addListener(map, 'click', function (e) {
+          const latlng = e.coord;
+          initRoadview(latlng);
+        });
+      }
+    }
+
+    // Roadview initialization
+    function initRoadview(latlng) {
+      if (!roadview) {
+        roadview = new naver.maps.Roadview('roadview');
+      }
+
+      const rvClient = new naver.maps.RoadviewClient();
+      const location = latlng || new naver.maps.LatLng(37.5665, 126.9780); // 클릭된 위치 또는 서울을 기본으로
+      roadview.setViewpoint(location);
+      rvClient.getNearestPanoId(location, function (panoId) {
+        if (panoId) {
+          roadview.setPanoId(panoId, location);
+        }
+      });
+    }
 
     // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
         const data = {
-          type: '매도',  // 매도로 설정
           itemType: document.getElementById('itemType').value,
           price: parseInt(document.getElementById('price').value),
           address: document.getElementById('address').value,
           timestamp: Date.now()
         };
 
-        await push(ref(db, '게시판'), data);
-        alert('매물 등록되었습니다!');
+        await push(ref(db, '매물'), data);
+        alert('매물이 등록되었습니다!');
         e.target.reset();
         showSection('homeSection');
       } catch (error) {
@@ -216,14 +236,13 @@
       e.preventDefault();
       try {
         const data = {
-          type: '매수',  // 매수로 설정
           buyType: document.getElementById('buyType').value,
           maxPrice: parseInt(document.getElementById('maxPrice').value),
           buyAddress: document.getElementById('buyAddress').value,
           timestamp: Date.now()
         };
 
-        await push(ref(db, '게시판'), data);
+        await push(ref(db, '매수자'), data);
         alert('매수 요청이 등록되었습니다!');
         e.target.reset();
         showSection('homeSection');
@@ -235,7 +254,7 @@
 
     // Load recent listings
     function updateRecentListings() {
-      const listingsRef = ref(db, '게시판');
+      const listingsRef = ref(db, '매물');
       onValue(listingsRef, (snapshot) => {
         const listings = snapshot.val();
         const recentListingsDiv = document.getElementById('recentListings');
@@ -244,35 +263,20 @@
         if (listings) {
           Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
-            const price = data.price || data.maxPrice;
+            // Check for undefined and format
+            const price = data.price;
             const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
             listingDiv.innerHTML = `
               <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
-                <h3>${data.itemType || data.buyType}</h3>
+                <h3>${data.itemType}</h3>
                 <p>가격: ${formattedPrice}만원</p>
-                <p>주소: ${data.address || data.buyAddress}</p>
-                <p>종류: ${data.type}</p> <!-- 구분 -->
-                <button onclick="deleteListing('${key}')">삭제</button>
+                <p>주소: ${data.address}</p>
               </div>
             `;
             recentListingsDiv.appendChild(listingDiv);
           });
         }
       });
-    }
-
-    // Delete Listing
-    function deleteListing(key) {
-      const listingRef = ref(db, '게시판/' + key);
-      remove(listingRef)
-        .then(() => {
-          alert('게시글이 삭제되었습니다.');
-          updateRecentListings();
-        })
-        .catch((error) => {
-          console.error('삭제 중 오류 발생:', error);
-          alert('삭제 오류 발생');
-        });
     }
 
     // Initialize the app
