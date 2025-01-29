@@ -151,7 +151,8 @@
 
       <label for="sellerName">작성자 이름:</label>
       <input type="text" id="sellerName" placeholder="작성자 이름" required>
-      <label>내용: <textarea id="content" maxlength="1000" required></textarea></label>
+      <label for="content">내용:</label>
+      <textarea id="content" placeholder="내용을 입력하세요" maxlength="1000" rows="5"></textarea>
 
       <button type="submit">등록하기</button>
     </form>
@@ -171,8 +172,9 @@
 
       <label for="buyerName">작성자 이름:</label>
       <input type="text" id="buyerName" placeholder="작성자 이름" required>
-      <label>내용: <textarea id="contentBuy" maxlength="1000" required></textarea></label>
-      <button type="submit">등록하기</button>
+      <label for="content">내용:</label>
+      <textarea id="buyContent" placeholder="내용을 입력하세요" maxlength="1000" rows="5"></textarea>
+<button type="submit">등록하기</button>
     </form>
   </section>
 
@@ -344,6 +346,7 @@
           Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
             const price = data.price;
+            const previewContent = post.content ? post.content.substring(0, 50) + '...' : '내용 없음';
             const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
             listingDiv.classList.add('listing');
             listingDiv.innerHTML = `
