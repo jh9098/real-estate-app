@@ -65,6 +65,13 @@
       border: 1px solid #ddd;
     }
 
+    #roadview {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
     section {
       margin-bottom: 30px;
     }
@@ -105,7 +112,7 @@
     <button id="mapBtn">🗺️<br>지도</button>
     <button id="sellBtn">🏢<br>매물</button>
     <button id="buyBtn">🔍<br>매수</button>
-    <button id="boardBtn">📋<br>게시판</button>
+    <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
   </div>
 
   <section id="homeSection">
@@ -155,8 +162,10 @@
 
   <section id="mapSection" style="display: none;">
     <div id="map"></div>
+    <div id="roadview"></div> <!-- 로드뷰를 위한 공간 -->
   </section>
 
+  <!-- 게시판 Section 추가 -->
   <section id="boardSection" style="display: none;">
     <h2>게시판</h2>
     <div class="filter-section">
@@ -172,53 +181,78 @@
     </div>
   </section>
 
+  <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
     import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
+    // Firebase Configuration
     const firebaseConfig = {
-      apiKey: "YOUR_FIREBASE_API_KEY",
-      authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
-      databaseURL: "YOUR_FIREBASE_DATABASE_URL",
-      projectId: "YOUR_FIREBASE_PROJECT_ID",
-      storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
-      appId: "YOUR_FIREBASE_APP_ID"
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+      authDomain: "real-estate-app-7a001.firebaseapp.com",
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "real-estate-app-7a001",
+      storageBucket: "real-estate-app-7a001.appspot.com",
+      messagingSenderId: "229808061189",
+      appId: "1:229808061189:web:fa083511b468b44e3556c"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    let filterValue = 'all';  // 필터 값을 저장할 변수
+
+    // Section management
     const sections = {
       homeSection: document.getElementById('homeSection'),
       sellSection: document.getElementById('sellSection'),
       buySection: document.getElementById('buySection'),
       mapSection: document.getElementById('mapSection'),
-      boardSection: document.getElementById('boardSection'),
+      boardSection: document.getElementById('boardSection') // 게시판 섹션
     };
 
     function showSection(sectionId) {
-      Object.values(sections).forEach((section) => section.style.display = 'none');
-      sections[sectionId].style.display = 'block';
+      Object.entries(sections).forEach(([id, element]) => {
+        element.style.display = id === sectionId ? 'block' : 'none';
+      });
+      if (sectionId === 'mapSection') {
+        initMap();
+      } else if (sectionId === 'boardSection') {
+        loadBoardPosts(); // 게시판 섹션에 들어가면 게시글 로드
+      }
     }
 
+    // Navigation
     document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
     document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
-    document.getElementById('boardBtn').addEventListener('click', () => {
-      showSection('boardSection');
-      loadBoardPosts();
-    });
+    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection')); // 게시판 버튼 클릭
 
+    // Map initialization
+    let map = null;
+    let roadview = null;
+
+    function initMap() {
+      if (!map) {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780),
+          zoom: 12
+        });
+      }
+    }
+
+    // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = {
         itemType: document.getElementById('itemType').value,
         price: parseInt(document.getElementById('price').value),
         address: document.getElementById('address').value,
-        sellerName: document.getElementById('sellerName').value,
-        type: 'sell',
+        sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
+        type: 'sell', // 매도글로 구분
+        timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
       alert('매물이 등록되었습니다!');
@@ -232,8 +266,9 @@
         buyType: document.getElementById('buyType').value,
         maxPrice: parseInt(document.getElementById('maxPrice').value),
         buyAddress: document.getElementById('buyAddress').value,
-        buyerName: document.getElementById('buyerName').value,
-        type: 'buy',
+        buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
+        type: 'buy', // 매수글로 구분
+        timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
       alert('매수 요청이 등록되었습니다!');
@@ -241,39 +276,89 @@
       showSection('homeSection');
     });
 
+    // Load recent listings for home
+    function updateRecentListings() {
+      const listingsRef = ref(db, '게시판');
+      onValue(listingsRef, (snapshot) => {
+        const posts = snapshot.val();
+        const recentListingsDiv = document.getElementById('recentListings');
+        recentListingsDiv.innerHTML = '';
+
+        if (posts) {
+          Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
+            const listingDiv = document.createElement('div');
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.classList.add('listing');
+            listingDiv.innerHTML = `
+              <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+              <p>가격: ${formattedPrice}만원</p>
+              <p>주소: ${data.address || data.buyAddress}</p>
+              <p>작성자: ${data.sellerName || data.buyerName}</p>
+              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
+            `;
+            recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
+
+    // Load posts for board with filtering
     function loadBoardPosts() {
       const filter = document.getElementById('postTypeFilter').value;
+      filterValue = filter;  // 필터 값을 저장
       const boardRef = ref(db, '게시판');
       onValue(boardRef, (snapshot) => {
         const posts = snapshot.val();
         const postListDiv = document.getElementById('postList');
         postListDiv.innerHTML = '';
+document.getElementById('postTypeFilter').addEventListener('change', () => {
+  loadBoardPosts(); // 필터 변경 후 즉시 게시글 갱신
+});
 
         if (posts) {
-          Object.entries(posts).forEach(([key, post]) => {
-            if (filter === 'all' || post.type === filter) {
-              const div = document.createElement('div');
-              div.innerHTML = `
-                <div class="listing">
-                  <h3>${post.itemType || post.buyType}</h3>
-                  <p>${post.price ? `가격: ${post.price}만원` : ''}</p>
-                  <p>${post.sellerName || post.buyerName}</p>
-                  <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
-                </div>`;
-              postListDiv.appendChild(div);
+          Object.entries(posts).reverse().forEach(([key, data]) => {
+            // Apply filter
+            if (filterValue === 'all' || data.type === filterValue) {
+              const postDiv = document.createElement('div');
+              const price = data.price;
+              const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+              postDiv.classList.add('listing');
+              postDiv.innerHTML = `
+                <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+                <p>가격: ${formattedPrice}만원</p>
+                <p>주소: ${data.address || data.buyAddress}</p>
+                <p>작성자: ${data.sellerName || data.buyerName}</p>
+                <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
+              `;
+              postListDiv.appendChild(postDiv);
             }
           });
         }
       });
     }
 
-    window.deletePost = function (key) {
-      const postRef = ref(db, `게시판/${key}`);
-      if (confirm('삭제하시겠습니까?')) {
-        remove(postRef).then(() => loadBoardPosts());
-      }
-    };
+    // Delete Listing
+    function deleteListing(key) {
+      const listingRef = ref(db, '게시판/' + key);
+      remove(listingRef)
+        .then(() => {
+          alert('게시글이 삭제되었습니다.');
+          updateRecentListings();
+        })
+        .catch((error) => {
+          console.error('삭제 중 오류 발생:', error);
+          alert('삭제 오류 발생');
+        });
+    }
+
+    // Initialize the app
+    updateRecentListings();
+    showSection('homeSection');
+
+
   </script>
+
 </body>
 
 </html>
