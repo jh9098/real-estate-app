@@ -104,13 +104,13 @@
 
 <body>
   <header>
-    <h1>부동산 커뮤니티</h1>
+    <h1>부동산 매물 및 매수자 등록</h1>
   </header>
 
   <div id="navbar">
     <button id="homeBtn">🏠<br>홈</button>
     <button id="mapBtn">🗺️<br>지도</button>
-    <button id="sellBtn">🏢<br>매도</button>
+    <button id="sellBtn">🏢<br>매물</button>
     <button id="buyBtn">🔍<br>매수</button>
     <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
   </div>
@@ -188,13 +188,13 @@
 
     // Firebase Configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs", 
-      authDomain: "real-estate-app-7a001.firebaseapp.com", 
-      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app", 
-      projectId: "real-estate-app-7a001", 
-      storageBucket: "real-estate-app-7a001.appspot.com", 
-      messagingSenderId: "229808061189", 
-      appId: "1:229808061189:web:fa083511b468b44e3556c" 
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+      authDomain: "real-estate-app-7a001.firebaseapp.com",
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "real-estate-app-7a001",
+      storageBucket: "real-estate-app-7a001.appspot.com",
+      messagingSenderId: "229808061189",
+      appId: "1:229808061189:web:fa083511b468b44e3556c"
     };
 
     // Initialize Firebase
@@ -276,27 +276,26 @@
       showSection('homeSection');
     });
 
-    // Load recent listings
+    // Load recent listings for home
     function updateRecentListings() {
       const listingsRef = ref(db, '게시판');
       onValue(listingsRef, (snapshot) => {
-        const listings = snapshot.val();
+        const posts = snapshot.val();
         const recentListingsDiv = document.getElementById('recentListings');
         recentListingsDiv.innerHTML = '';
 
-        if (listings) {
-          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
+        if (posts) {
+          Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
-            const price = data.price || data.maxPrice;
+            const price = data.price;
             const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.classList.add('listing');
             listingDiv.innerHTML = 
-              <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
-                <h3>${data.itemType || data.buyType}</h3>
-                <p>가격: ${formattedPrice}만원</p>
-                <p>주소: ${data.address || data.buyAddress}</p>
-                <p>종류: ${data.type}</p> <!-- 구분 -->
-                <button onclick="deleteListing('${key}')">삭제</button>
-              </div>
+              <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+              <p>가격: ${formattedPrice}만원</p>
+              <p>주소: ${data.address || data.buyAddress}</p>
+              <p>작성자: ${data.sellerName || data.buyerName}</p>
+              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
             ;
             recentListingsDiv.appendChild(listingDiv);
           });
@@ -325,13 +324,13 @@ document.getElementById('postTypeFilter').addEventListener('change', () => {
               const price = data.price;
               const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
               postDiv.classList.add('listing');
-              postDiv.innerHTML = `
+              postDiv.innerHTML = 
                 <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
                 <p>가격: ${formattedPrice}만원</p>
                 <p>주소: ${data.address || data.buyAddress}</p>
                 <p>작성자: ${data.sellerName || data.buyerName}</p>
                 <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
-              `;
+              ;
               postListDiv.appendChild(postDiv);
             }
           });
@@ -339,24 +338,26 @@ document.getElementById('postTypeFilter').addEventListener('change', () => {
       });
     }
 
-    // 게시글 삭제 함수
-    window.deletePost = function (postKey) {
-      const postRef = ref(db, `게시판/${postKey}`);
-      if (confirm('정말 삭제하시겠습니까?')) {
-        remove(postRef)
-          .then(() => {
-            alert('게시글이 삭제되었습니다.');
-          })
-          .catch((error) => {
-            console.error('삭제 중 오류 발생:', error);
-            alert('삭제 중 오류가 발생했습니다.');
-          });
-      }
-    };
+    // Delete a post
+    function deletePost(postKey) {
+  const postRef = ref(db, '게시판/' + postKey);
+  
+  if (confirm('삭제하시겠습니까?')) {
+    remove(postRef)
+      .then(() => {
+        alert('게시글이 삭제되었습니다.');
+        loadBoardPosts(); // 게시판 업데이트
+      })
+      .catch((error) => {
+        console.error('게시글 삭제 실패:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+      });
+  }
+}
 
-    // 초기 게시글 로드
-    loadBoardPosts();
-
+    // Initialize the app
+    updateRecentListings();
+    showSection('homeSection');
   </script>
 
 </body>
