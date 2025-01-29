@@ -1,32 +1,57 @@
-const CACHE_NAME = 'real-estate-cache-v1'; // 캐시 이름
+const CACHE_NAME = 'real-estate-cache-v2'; // 새로운 캐시 이름 (버전 변경)
 const urlsToCache = [
   'index.html',
   'style.css',
-  'script.js', // 필요한 JS 파일
-  'icon-72x72.png', // 아이콘 파일
+  'script.js',
+  'manifest.json',
+  'icon-72x72.png',
   'icon-96x96.png',
   'icon-144x144.png',
   'icon-192x192.png',
   'icon-512x512.png'
-]; // 캐싱할 파일 목록
+];
 
+// 설치 이벤트 (캐싱 초기화)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        return cache.addAll(urlsToCache); // 파일들을 캐시에 추가
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
       })
   );
 });
 
+// 활성화 이벤트 (이전 버전의 캐시 삭제)
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('Old cache removed:', cache);
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
+});
+
+// 네트워크 우선 전략 추가
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request) // 요청에 맞는 캐시된 파일이 있는지 확인
+    fetch(event.request) // 네트워크에서 먼저 시도
       .then((response) => {
-        if (response) {
-          return response; // 캐시된 파일 반환
-        }
-        return fetch(event.request); // 캐시된 파일이 없으면 네트워크 요청
+        // 성공적으로 가져오면 캐시에 저장
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, response.clone());
+          return response;
+        });
+      })
+      .catch(() => {
+        // 네트워크 실패 시 캐시에서 가져오기
+        return caches.match(event.request);
       })
   );
 });
