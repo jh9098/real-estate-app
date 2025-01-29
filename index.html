@@ -109,7 +109,7 @@
   <div id="navbar">
     <button id="homeBtn">🏠<br>홈</button>
     <button id="mapBtn">🗺️<br>지도</button>
-    <button id="sellBtn">🏢<br>매도</button>
+    <button id="sellBtn">🏢<br>매물</button>
     <button id="buyBtn">🔍<br>매수</button>
     <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
   </div>
@@ -292,6 +292,7 @@
               <p>가격: ${formattedPrice}만원</p>
               <p>주소: ${data.address || data.buyAddress}</p>
               <p>작성자: ${data.sellerName || data.buyerName}</p>
+              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
             `;
             recentListingsDiv.appendChild(listingDiv);
           });
