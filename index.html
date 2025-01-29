@@ -279,15 +279,10 @@
         type: 'sell', // 매도글로 구분
         timestamp: Date.now()
       };
-      try {
-        await push(ref(db, '게시판'), data); // 게시판 경로에 데이터 추가
-        alert('매물이 등록되었습니다.');
-        e.target.reset();
-        loadBoardPosts(); // 게시판 갱신
-      } catch (error) {
-        console.error('매물 등록 실패:', error);
-        alert('매물 등록 중 오류가 발생했습니다.');
-      }
+      await push(ref(db, '게시판'), data);
+      alert('매물이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
     });
 
     document.getElementById('buyForm').addEventListener('submit', async (e) => {
@@ -301,15 +296,10 @@
         type: 'buy', // 매수글로 구분
         timestamp: Date.now()
       };
-      try {
-        await push(ref(db, '게시판'), data); // 게시판 경로에 데이터 추가
-        alert('매수 요청이 등록되었습니다.');
-        e.target.reset();
-        loadBoardPosts(); // 게시판 갱신
-      } catch (error) {
-        console.error('매수 요청 등록 실패:', error);
-        alert('매수 요청 등록 중 오류가 발생했습니다.');
-      }
+      await push(ref(db, '게시판'), data);
+      alert('매수 요청이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
     });
     
     onValue(ref(db, '게시판'), (snapshot) => {
