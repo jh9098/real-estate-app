@@ -274,6 +274,7 @@
         address: document.getElementById('address').value,
         sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
         type: 'sell', // 매도글로 구분
+        content: document.getElementById('content').value,
         timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
@@ -290,6 +291,7 @@
         buyAddress: document.getElementById('buyAddress').value,
         buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
         type: 'buy', // 매수글로 구분
+        content: document.getElementById('contentBuy').value,
         timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
