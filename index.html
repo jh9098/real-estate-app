@@ -311,6 +311,9 @@
         const posts = snapshot.val();
         const postListDiv = document.getElementById('postList');
         postListDiv.innerHTML = '';
+document.getElementById('postTypeFilter').addEventListener('change', () => {
+  loadBoardPosts(); // 필터 변경 후 즉시 게시글 갱신
+});
 
         if (posts) {
           Object.entries(posts).reverse().forEach(([key, data]) => {
