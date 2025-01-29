@@ -339,17 +339,20 @@ document.getElementById('postTypeFilter').addEventListener('change', () => {
 
     // Delete a post
     function deletePost(postKey) {
-      const postRef = ref(db, '게시판/' + postKey);
-      if (confirm('삭제하시겠습니까?')) {
-        remove(postRef).then(() => {
-          alert('게시글이 삭제되었습니다.');
-          loadBoardPosts();  // 삭제 후 게시글 리스트 갱신
-        }).catch((error) => {
-          console.error('게시글 삭제 실패', error);
-          alert('게시글 삭제 중 오류가 발생했습니다.');
-        });
-      }
-    }
+  const postRef = ref(db, '게시판/' + postKey);
+  
+  if (confirm('삭제하시겠습니까?')) {
+    remove(postRef)
+      .then(() => {
+        alert('게시글이 삭제되었습니다.');
+        loadBoardPosts(); // 게시판 업데이트
+      })
+      .catch((error) => {
+        console.error('게시글 삭제 실패:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+      });
+  }
+}
 
     // Initialize the app
     updateRecentListings();
