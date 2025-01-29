@@ -275,14 +275,19 @@
         price: parseInt(document.getElementById('price').value),
         address: document.getElementById('address').value,
         sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
-        type: 'sell', // 매도글로 구분
         content: document.getElementById('content').value,
+        type: 'sell', // 매도글로 구분
         timestamp: Date.now()
       };
-      await push(ref(db, '게시판'), data);
-      alert('매물이 등록되었습니다!');
-      e.target.reset();
-      showSection('homeSection');
+      try {
+        await push(ref(db, '게시판'), data); // 게시판 경로에 데이터 추가
+        alert('매물이 등록되었습니다.');
+        e.target.reset();
+        loadBoardPosts(); // 게시판 갱신
+      } catch (error) {
+        console.error('매물 등록 실패:', error);
+        alert('매물 등록 중 오류가 발생했습니다.');
+      }
     });
 
     document.getElementById('buyForm').addEventListener('submit', async (e) => {
@@ -292,15 +297,21 @@
         maxPrice: parseInt(document.getElementById('maxPrice').value),
         buyAddress: document.getElementById('buyAddress').value,
         buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
-        type: 'buy', // 매수글로 구분
         content: document.getElementById('contentBuy').value,
+        type: 'buy', // 매수글로 구분
         timestamp: Date.now()
       };
-      await push(ref(db, '게시판'), data);
-      alert('매수 요청이 등록되었습니다!');
-      e.target.reset();
-      showSection('homeSection');
+      try {
+        await push(ref(db, '게시판'), data); // 게시판 경로에 데이터 추가
+        alert('매수 요청이 등록되었습니다.');
+        e.target.reset();
+        loadBoardPosts(); // 게시판 갱신
+      } catch (error) {
+        console.error('매수 요청 등록 실패:', error);
+        alert('매수 요청 등록 중 오류가 발생했습니다.');
+      }
     });
+    
     onValue(ref(db, '게시판'), (snapshot) => {
       const posts = snapshot.val();
       const postList = document.getElementById('postList');
@@ -361,7 +372,22 @@
         }
       });
     }
-
+    function viewPostDetail(key) {
+      const postRef = ref(db, `게시판/${key}`);
+      onValue(postRef, (snapshot) => {
+        const post = snapshot.val();
+        const detailDiv = document.getElementById('postDetail');
+        detailDiv.innerHTML = `
+          <h3>${post.itemType || post.buyType}</h3>
+          <p>가격: ${post.price || post.maxPrice}만원</p>
+          <p>주소: ${post.address || post.buyAddress}</p>
+          <p>작성자: ${post.sellerName || post.buyerName}</p>
+          <p>내용: ${post.content}</p>
+          <button onclick="chatWithUser('${post.sellerName || post.buyerName}')">1:1 채팅하기</button>
+        `;
+        showSection('postDetailSection');
+      });
+    }
    // 게시글 로드 함수
   function loadBoardPosts() {
     const boardRef = ref(db, '게시판');
