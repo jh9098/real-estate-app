@@ -200,6 +200,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    let filterValue = 'all';  // 필터 값을 저장할 변수
+
     // Section management
     const sections = {
       homeSection: document.getElementById('homeSection'),
@@ -303,6 +305,7 @@
     // Load posts for board with filtering
     function loadBoardPosts() {
       const filter = document.getElementById('postTypeFilter').value;
+      filterValue = filter;  // 필터 값을 저장
       const boardRef = ref(db, '게시판');
       onValue(boardRef, (snapshot) => {
         const posts = snapshot.val();
@@ -312,7 +315,7 @@
         if (posts) {
           Object.entries(posts).reverse().forEach(([key, data]) => {
             // Apply filter
-            if (filter === 'all' || data.type === filter) {
+            if (filterValue === 'all' || data.type === filterValue) {
               const postDiv = document.createElement('div');
               const price = data.price;
               const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
