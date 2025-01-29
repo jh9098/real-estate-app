@@ -268,26 +268,38 @@
     });
 
     function loadBoardPosts() {
-      const filter = document.getElementById('postTypeFilter').value;
       const boardRef = ref(db, '게시판');
+      const postListDiv = document.getElementById('postList');
+      postListDiv.innerHTML = ''; // 기존 게시글 초기화
+  
       onValue(boardRef, (snapshot) => {
         const posts = snapshot.val();
-        const postListDiv = document.getElementById('postList');
-        postListDiv.innerHTML = '';
-
+  
         if (posts) {
-          Object.entries(posts).forEach(([key, post]) => {
-            if (filter === 'all' || post.type === filter) {
-              const previewContent = post.content ? post.content.substring(0, 50) + '...' : '내용 없음';
-              const div = document.createElement('div');
-              div.innerHTML = `
-                <div class="listing">
-                  <h3>${post.itemType || post.buyType}</h3>
-                  <p>${previewContent}</p>
-                  <button onclick="viewPostDetail('${key}')">자세히 보기</button>
-                </div>`;
-              postListDiv.appendChild(div);
-            }
+          Object.entries(posts).reverse().forEach(([key, data]) => {
+            const postDiv = document.createElement('div');
+            postDiv.classList.add('listing');
+  
+            // 삭제 버튼 추가
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-btn');
+            deleteButton.textContent = '삭제';
+            deleteButton.onclick = () => deletePost(key);
+  
+            // 게시글 내용 구성
+            const price = data.price || data.maxPrice || 'N/A';
+            const shortContent = data.content ? data.content.slice(0, 50) + '...' : '내용 없음';
+            postDiv.innerHTML = `
+              <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+              <p>가격: ${price}만원</p>
+              <p>주소: ${data.address || data.buyAddress}</p>
+              <p>내용: ${shortContent}</p>
+              <p>작성자: ${data.sellerName || data.buyerName}</p>
+            `;
+  
+            // 삭제 버튼을 맨 오른쪽에 추가
+            postDiv.appendChild(deleteButton);
+            postListDiv.appendChild(postDiv);
           });
         }
       });
