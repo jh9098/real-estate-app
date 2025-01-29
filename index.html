@@ -197,6 +197,8 @@
       });
       if (sectionId === 'mapSection') {
         initMap();
+      } else if (sectionId === 'boardSection') {
+        loadBoardPosts(); // 게시판 섹션에 들어가면 게시글 로드
       }
     }
 
@@ -251,7 +253,7 @@
       showSection('homeSection');
     });
 
-    // Load recent listings and board posts
+    // Load recent listings for home
     function updateRecentListings() {
       const listingsRef = ref(db, '게시판');
       onValue(listingsRef, (snapshot) => {
@@ -269,9 +271,34 @@
               <h3>${data.itemType || data.buyType}</h3>
               <p>가격: ${formattedPrice}만원</p>
               <p>주소: ${data.address || data.buyAddress}</p>
-              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
             `;
             recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
+
+    // Load posts for board
+    function loadBoardPosts() {
+      const boardRef = ref(db, '게시판');
+      onValue(boardRef, (snapshot) => {
+        const posts = snapshot.val();
+        const postListDiv = document.getElementById('postList');
+        postListDiv.innerHTML = '';
+
+        if (posts) {
+          Object.entries(posts).reverse().forEach(([key, data]) => {
+            const postDiv = document.createElement('div');
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            postDiv.classList.add('listing');
+            postDiv.innerHTML = `
+              <h3>${data.itemType || data.buyType}</h3>
+              <p>가격: ${formattedPrice}만원</p>
+              <p>주소: ${data.address || data.buyAddress}</p>
+              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
+            `;
+            postListDiv.appendChild(postDiv);
           });
         }
       });
