@@ -276,26 +276,27 @@
       showSection('homeSection');
     });
 
-    // Load recent listings for home
+    // Load recent listings
     function updateRecentListings() {
       const listingsRef = ref(db, '게시판');
       onValue(listingsRef, (snapshot) => {
-        const posts = snapshot.val();
+        const listings = snapshot.val();
         const recentListingsDiv = document.getElementById('recentListings');
         recentListingsDiv.innerHTML = '';
 
-        if (posts) {
-          Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
+        if (listings) {
+          Object.entries(listings).reverse().slice(0, 5).forEach(([key, data]) => {
             const listingDiv = document.createElement('div');
-            const price = data.price;
+            const price = data.price || data.maxPrice;
             const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
-            listingDiv.classList.add('listing');
             listingDiv.innerHTML = `
-              <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
-              <p>가격: ${formattedPrice}만원</p>
-              <p>주소: ${data.address || data.buyAddress}</p>
-              <p>작성자: ${data.sellerName || data.buyerName}</p>
-              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
+              <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <h3>${data.itemType || data.buyType}</h3>
+                <p>가격: ${formattedPrice}만원</p>
+                <p>주소: ${data.address || data.buyAddress}</p>
+                <p>종류: ${data.type}</p> <!-- 구분 -->
+                <button onclick="deleteListing('${key}')">삭제</button>
+              </div>
             `;
             recentListingsDiv.appendChild(listingDiv);
           });
