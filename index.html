@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="ko">
 
 <head>
@@ -11,10 +11,11 @@
   <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
 
   <style>
+    /* Basic styles */
     body {
       margin: 0;
       padding: 20px;
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
 
     header {
@@ -31,7 +32,7 @@
     }
 
     button {
-      padding: 10px;
+      padding: 10px 20px;
       border: none;
       border-radius: 5px;
       background-color: #007bff;
@@ -43,13 +44,36 @@
       background-color: #0056b3;
     }
 
-    section {
-      display: none;
-      margin-bottom: 30px;
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
     }
 
-    .visible {
-      display: block;
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    #roadview {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    section {
+      margin-bottom: 30px;
     }
 
     .listing {
@@ -71,6 +95,9 @@
       background-color: darkred;
     }
 
+    .filter-section {
+      margin: 20px 0;
+    }
     .back-btn {
       margin-top: 20px;
       padding: 10px;
@@ -92,114 +119,183 @@
 
 <body>
   <header>
-    <h1>부동산 커뮤니티</h1>
+    <h1>부동산 매물 및 매수자 등록</h1>
   </header>
 
   <div id="navbar">
-    <button onclick="showSection('home')">🏠 홈</button>
-    <button onclick="showSection('map')">🗺️ 지도</button>
-    <button onclick="showSection('sell')">🏢 매도</button>
-    <button onclick="showSection('buy')">🔍 매수</button>
-    <button onclick="showSection('board')">📋 게시판</button>
+    <button id="homeBtn">🏠<br>홈</button>
+    <button id="mapBtn">🗺️<br>지도</button>
+    <button id="sellBtn">🏢<br>매물</button>
+    <button id="buyBtn">🔍<br>매수</button>
+    <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
   </div>
 
-  <!-- Sections -->
-  <section id="homeSection" class="visible">
-    <h2>홈</h2>
-    <div id="recentListings"></div>
+  <section id="homeSection">
+    <h2>최근 등록 매물</h2>
+    <div id="recentListings">
+      <!-- Recent listings will be populated here -->
+    </div>
   </section>
 
-  <section id="mapSection">
-    <h2>지도</h2>
-    <div id="map"></div>
-  </section>
-
-  <section id="sellSection">
-    <h2>매도 등록</h2>
+  <section id="sellSection" style="display: none;">
+    <h2>매물 등록</h2>
     <form id="sellForm">
-      <label>종류: <input type="text" id="itemType" required></label>
-      <label>가격: <input type="number" id="price" required></label>
-      <label>주소: <input type="text" id="address" required></label>
-      <label>작성자: <input type="text" id="sellerName" required></label>
-      <label>내용: <textarea id="content" maxlength="1000" required></textarea></label>
+      <label for="itemType">종류:</label>
+      <input type="text" id="itemType" placeholder="예: 아파트" required>
+
+      <label for="price">가격 (만원):</label>
+      <input type="number" id="price" placeholder="예: 50000" required>
+
+      <label for="address">주소:</label>
+      <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required>
+
+      <label for="sellerName">작성자 이름:</label>
+      <input type="text" id="sellerName" placeholder="작성자 이름" required>
+
       <button type="submit">등록하기</button>
     </form>
   </section>
 
-  <section id="buySection">
+  <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
-      <label>종류: <input type="text" id="buyType" required></label>
-      <label>가격: <input type="number" id="maxPrice" required></label>
-      <label>주소: <input type="text" id="buyAddress" required></label>
-      <label>작성자: <input type="text" id="buyerName" required></label>
-      <label>내용: <textarea id="contentBuy" maxlength="1000" required></textarea></label>
+      <label for="buyType">찾는 매물 종류:</label>
+      <input type="text" id="buyType" placeholder="예: 아파트" required>
+
+      <label for="maxPrice">매수가격 (만원):</label>
+      <input type="number" id="maxPrice" placeholder="예: 50000" required>
+
+      <label for="buyAddress">주소:</label>
+      <input type="text" id="buyAddress" placeholder="예: 서울시 종로구 새문안로68" required>
+
+      <label for="buyerName">작성자 이름:</label>
+      <input type="text" id="buyerName" placeholder="작성자 이름" required>
+
       <button type="submit">등록하기</button>
     </form>
   </section>
 
-  <section id="boardSection">
+  <section id="mapSection" style="display: none;">
+    <div id="map"></div>
+    <div id="roadview"></div> <!-- 로드뷰를 위한 공간 -->
+  </section>
+
+  <!-- 게시판 Section 추가 -->
+  <section id="boardSection" style="display: none;">
     <h2>게시판</h2>
-    <div id="postList"></div>
+    <div class="filter-section">
+      <label for="postTypeFilter">매도/매수 필터:</label>
+      <select id="postTypeFilter">
+        <option value="all">전체</option>
+        <option value="sell">매도</option>
+        <option value="buy">매수</option>
+      </select>
+      <section id="postDetailSection">
+        <h2>게시글 상세</h2>
+        <div id="postDetail"></div>
+        <button class="back-btn" onclick="showSection('board')">뒤로가기</button>
+      </section>
+    </div>
+    <div id="postList">
+      <!-- 게시글 목록 -->
+    </div>
   </section>
 
-  <section id="postDetailSection">
-    <h2>게시글 상세</h2>
-    <div id="postDetail"></div>
-    <button class="back-btn" onclick="showSection('board')">뒤로가기</button>
-  </section>
-
-  <!-- Firebase -->
+  <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
     import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-    const firebaseConfig = { /* your firebase config */ };
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+      authDomain: "real-estate-app-7a001.firebaseapp.com",
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "real-estate-app-7a001",
+      storageBucket: "real-estate-app-7a001.appspot.com",
+      messagingSenderId: "229808061189",
+      appId: "1:229808061189:web:fa083511b468b44e3556c"
+    };
+
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    let filterValue = 'all';  // 필터 값을 저장할 변수
+
+    // Section management
     const sections = {
-      home: document.getElementById('homeSection'),
-      map: document.getElementById('mapSection'),
-      sell: document.getElementById('sellSection'),
-      buy: document.getElementById('buySection'),
-      board: document.getElementById('boardSection'),
-      detail: document.getElementById('postDetailSection')
+      homeSection: document.getElementById('homeSection'),
+      sellSection: document.getElementById('sellSection'),
+      buySection: document.getElementById('buySection'),
+      mapSection: document.getElementById('mapSection'),
+      boardSection: document.getElementById('boardSection'), // 게시판 섹션
+      postDetailSection: document.getElementById('postDetailSection')
     };
 
-    function showSection(section) {
-      Object.values(sections).forEach(sec => sec.classList.remove('visible'));
-      sections[section].classList.add('visible');
+    function showSection(sectionId) {
+      Object.entries(sections).forEach(([id, element]) => {
+        element.style.display = id === sectionId ? 'block' : 'none';
+      });
+      if (sectionId === 'mapSection') {
+        initMap();
+      } else if (sectionId === 'boardSection') {
+        loadBoardPosts(); // 게시판 섹션에 들어가면 게시글 로드
+      }
     }
 
+    // Navigation
+    document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
+    document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
+    document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
+    document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
+    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection')); // 게시판 버튼 클릭
+    document.getElementById('detailBtn').addEventListener('click', () => showSection('postDetailSection')); // 게시글 상세 버튼 클릭
+    // Map initialization
+    let map = null;
+    let roadview = null;
+
+    function initMap() {
+      if (!map) {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780),
+          zoom: 12
+        });
+      }
+    }
+
+    // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = {
-        type: 'sell',
         itemType: document.getElementById('itemType').value,
-        price: document.getElementById('price').value,
+        price: parseInt(document.getElementById('price').value),
         address: document.getElementById('address').value,
-        sellerName: document.getElementById('sellerName').value,
-        content: document.getElementById('content').value
+        sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
+        type: 'sell', // 매도글로 구분
+        timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
-      alert('매물이 등록되었습니다.');
+      alert('매물이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
     });
 
     document.getElementById('buyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = {
-        type: 'buy',
         buyType: document.getElementById('buyType').value,
-        maxPrice: document.getElementById('maxPrice').value,
+        maxPrice: parseInt(document.getElementById('maxPrice').value),
         buyAddress: document.getElementById('buyAddress').value,
-        buyerName: document.getElementById('buyerName').value,
-        content: document.getElementById('contentBuy').value
+        buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
+        type: 'buy', // 매수글로 구분
+        timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
-      alert('매수 요청이 등록되었습니다.');
+      alert('매수 요청이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
     });
-
     onValue(ref(db, '게시판'), (snapshot) => {
       const posts = snapshot.val();
       const postList = document.getElementById('postList');
@@ -213,6 +309,7 @@
           <h3>${post.itemType || post.buyType}</h3>
           <p>${post.content.substring(0, 50)}...</p>
           <button onclick="showDetail('${key}')">자세히 보기</button>
+          <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
         `;
         postList.appendChild(postDiv);
       }
@@ -232,7 +329,92 @@
         showSection('detail');
       });
     };
+    // Load recent listings for home
+    function updateRecentListings() {
+      const listingsRef = ref(db, '게시판');
+      onValue(listingsRef, (snapshot) => {
+        const posts = snapshot.val();
+        const recentListingsDiv = document.getElementById('recentListings');
+        recentListingsDiv.innerHTML = '';
+
+        if (posts) {
+          Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
+            const listingDiv = document.createElement('div');
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.classList.add('listing');
+            listingDiv.innerHTML = `
+              <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+              <p>가격: ${formattedPrice}만원</p>
+              <p>주소: ${data.address || data.buyAddress}</p>
+              <p>작성자: ${data.sellerName || data.buyerName}</p>
+              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
+            `;
+            recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
+
+   // 게시글 로드 함수
+  function loadBoardPosts() {
+    const boardRef = ref(db, '게시판');
+    const postListDiv = document.getElementById('postList');
+    postListDiv.innerHTML = ''; // 기존 게시글 초기화
+
+    onValue(boardRef, (snapshot) => {
+      const posts = snapshot.val();
+
+      if (posts) {
+        Object.entries(posts).reverse().forEach(([key, data]) => {
+          const postDiv = document.createElement('div');
+          postDiv.classList.add('listing');
+
+          // 삭제 버튼 추가
+          const deleteButton = document.createElement('button');
+          deleteButton.classList.add('delete-btn');
+          deleteButton.textContent = '삭제';
+          deleteButton.onclick = () => deletePost(key);
+
+          // 게시글 내용 구성
+          const price = data.price || data.maxPrice || 'N/A';
+          const shortContent = data.content ? data.content.slice(0, 50) + '...' : '내용 없음';
+          postDiv.innerHTML = `
+            <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+            <p>가격: ${price}만원</p>
+            <p>주소: ${data.address || data.buyAddress}</p>
+            <p>내용: ${shortContent}</p>
+            <p>작성자: ${data.sellerName || data.buyerName}</p>
+          `;
+
+          // 삭제 버튼을 맨 오른쪽에 추가
+          postDiv.appendChild(deleteButton);
+          postListDiv.appendChild(postDiv);
+        });
+      }
+    });
+  }
+
+  // 게시글 삭제 함수
+  function deletePost(postKey) {
+    const postRef = ref(db, `게시판/${postKey}`);
+    if (confirm('정말 삭제하시겠습니까?')) {
+      remove(postRef)
+        .then(() => {
+          alert('게시글이 삭제되었습니다.');
+          loadBoardPosts(); // 게시글 목록 갱신
+        })
+        .catch((error) => {
+          console.error('삭제 중 오류 발생:', error);
+          alert('삭제 중 오류가 발생했습니다.');
+        });
+    }
+  }
+
+  // 초기화
+  loadBoardPosts();
   </script>
+
 </body>
 
 </html>
