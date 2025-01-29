@@ -248,7 +248,7 @@
         price: parseInt(document.getElementById('price').value),
         address: document.getElementById('address').value,
         sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
-        type: 'sell',
+        type: 'sell', // 매도글로 구분
         timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
@@ -264,7 +264,7 @@
         maxPrice: parseInt(document.getElementById('maxPrice').value),
         buyAddress: document.getElementById('buyAddress').value,
         buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
-        type: 'buy',
+        type: 'buy', // 매수글로 구분
         timestamp: Date.now()
       };
       await push(ref(db, '게시판'), data);
