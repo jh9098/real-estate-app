@@ -44,6 +44,31 @@
       background-color: #0056b3;
     }
 
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+
     .listing {
       border: 1px solid #ddd;
       padding: 10px;
@@ -66,6 +91,7 @@
     .filter-section {
       margin: 20px 0;
     }
+
   </style>
 </head>
 
@@ -89,37 +115,46 @@
     </div>
   </section>
 
-  <section id="mapSection" style="display: none;">
-    <h2>지도</h2>
-    <div id="map" style="width: 100%; height: 400px; border: 1px solid #ddd;"></div>
-  </section>
-
   <section id="sellSection" style="display: none;">
     <h2>매물 등록</h2>
     <form id="sellForm">
       <label for="itemType">종류:</label>
       <input type="text" id="itemType" placeholder="예: 아파트" required>
-      <label for="price">가격:</label>
-      <input type="number" id="price" placeholder="가격" required>
+
+      <label for="price">가격 (만원):</label>
+      <input type="number" id="price" placeholder="예: 50000" required>
+
       <label for="address">주소:</label>
-      <input type="text" id="address" placeholder="주소" required>
-      <label for="sellerName">작성자:</label>
+      <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required>
+
+      <label for="sellerName">작성자 이름:</label>
       <input type="text" id="sellerName" placeholder="작성자 이름" required>
-      <button type="submit">등록</button>
+
+      <button type="submit">등록하기</button>
     </form>
   </section>
 
   <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
-      <label for="buyType">찾는 종류:</label>
+      <label for="buyType">찾는 매물 종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
-      <label for="maxPrice">매수가격:</label>
-      <input type="number" id="maxPrice" placeholder="가격" required>
-      <label for="buyerName">작성자:</label>
+
+      <label for="maxPrice">매수가격 (만원):</label>
+      <input type="number" id="maxPrice" placeholder="예: 50000" required>
+
+      <label for="buyAddress">주소:</label>
+      <input type="text" id="buyAddress" placeholder="예: 서울시 종로구 새문안로68" required>
+
+      <label for="buyerName">작성자 이름:</label>
       <input type="text" id="buyerName" placeholder="작성자 이름" required>
-      <button type="submit">등록</button>
+
+      <button type="submit">등록하기</button>
     </form>
+  </section>
+
+  <section id="mapSection" style="display: none;">
+    <div id="map"></div>
   </section>
 
   <section id="boardSection" style="display: none;">
@@ -139,7 +174,7 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, onValue, remove, push } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
     const firebaseConfig = {
       apiKey: "YOUR_FIREBASE_API_KEY",
@@ -156,9 +191,9 @@
 
     const sections = {
       homeSection: document.getElementById('homeSection'),
-      mapSection: document.getElementById('mapSection'),
       sellSection: document.getElementById('sellSection'),
       buySection: document.getElementById('buySection'),
+      mapSection: document.getElementById('mapSection'),
       boardSection: document.getElementById('boardSection'),
     };
 
@@ -171,9 +206,41 @@
     document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
-    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection'));
+    document.getElementById('boardBtn').addEventListener('click', () => {
+      showSection('boardSection');
+      loadBoardPosts();
+    });
 
-    // Functions for adding, deleting, and loading posts
+    document.getElementById('sellForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        itemType: document.getElementById('itemType').value,
+        price: parseInt(document.getElementById('price').value),
+        address: document.getElementById('address').value,
+        sellerName: document.getElementById('sellerName').value,
+        type: 'sell',
+      };
+      await push(ref(db, '게시판'), data);
+      alert('매물이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
+    });
+
+    document.getElementById('buyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        buyType: document.getElementById('buyType').value,
+        maxPrice: parseInt(document.getElementById('maxPrice').value),
+        buyAddress: document.getElementById('buyAddress').value,
+        buyerName: document.getElementById('buyerName').value,
+        type: 'buy',
+      };
+      await push(ref(db, '게시판'), data);
+      alert('매수 요청이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
+    });
+
     function loadBoardPosts() {
       const filter = document.getElementById('postTypeFilter').value;
       const boardRef = ref(db, '게시판');
@@ -206,8 +273,6 @@
         remove(postRef).then(() => loadBoardPosts());
       }
     };
-
-    document.getElementById('postTypeFilter').addEventListener('change', loadBoardPosts);
   </script>
 </body>
 
