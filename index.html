@@ -2,10 +2,9 @@
 <html lang="ko">
 
 <head>
-  <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>부동산 PWA</title>
+  <title>부동산 커뮤니케이션</title>
 
   <!-- Naver Maps API Script -->
   <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
@@ -76,41 +75,18 @@
       margin-bottom: 30px;
     }
 
-    .listing {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 4px;
-    }
-
-    .delete-btn {
-      background-color: red;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-
-    .delete-btn:hover {
-      background-color: darkred;
-    }
-
-    .filter-section {
-      margin: 20px 0;
-    }
-
   </style>
 </head>
 
 <body>
   <header>
-    <h1>부동산 매물 및 매수자 등록</h1>
+    <h1>부동산 커뮤니케이션</h1>
   </header>
 
   <div id="navbar">
     <button id="homeBtn">🏠<br>홈</button>
     <button id="mapBtn">🗺️<br>지도</button>
-    <button id="sellBtn">🏢<br>매물</button>
+    <button id="sellBtn">🏢<br>매도</button>
     <button id="buyBtn">🔍<br>매수</button>
     <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
   </div>
@@ -128,14 +104,11 @@
       <label for="itemType">종류:</label>
       <input type="text" id="itemType" placeholder="예: 아파트" required>
 
-      <label for="price">가격 (만원):</label>
+      <label for="price">매도가격 (만원):</label>
       <input type="number" id="price" placeholder="예: 50000" required>
 
       <label for="address">주소:</label>
       <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required>
-
-      <label for="sellerName">작성자 이름:</label>
-      <input type="text" id="sellerName" placeholder="작성자 이름" required>
 
       <button type="submit">등록하기</button>
     </form>
@@ -144,7 +117,7 @@
   <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
-      <label for="buyType">찾는 매물 종류:</label>
+      <label for="buyType">종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
 
       <label for="maxPrice">매수가격 (만원):</label>
@@ -152,9 +125,6 @@
 
       <label for="buyAddress">주소:</label>
       <input type="text" id="buyAddress" placeholder="예: 서울시 종로구 새문안로68" required>
-
-      <label for="buyerName">작성자 이름:</label>
-      <input type="text" id="buyerName" placeholder="작성자 이름" required>
 
       <button type="submit">등록하기</button>
     </form>
@@ -165,19 +135,10 @@
     <div id="roadview"></div> <!-- 로드뷰를 위한 공간 -->
   </section>
 
-  <!-- 게시판 Section 추가 -->
   <section id="boardSection" style="display: none;">
     <h2>게시판</h2>
-    <div class="filter-section">
-      <label for="postTypeFilter">매도/매수 필터:</label>
-      <select id="postTypeFilter">
-        <option value="all">전체</option>
-        <option value="sell">매도</option>
-        <option value="buy">매수</option>
-      </select>
-    </div>
-    <div id="postList">
-      <!-- 게시글 목록 -->
+    <div id="boardList">
+      <!-- 게시판 내용이 여기에 표시됩니다. -->
     </div>
   </section>
 
@@ -201,15 +162,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let filterValue = 'all';  // 필터 값을 저장할 변수
-
     // Section management
     const sections = {
       homeSection: document.getElementById('homeSection'),
       sellSection: document.getElementById('sellSection'),
       buySection: document.getElementById('buySection'),
       mapSection: document.getElementById('mapSection'),
-      boardSection: document.getElementById('boardSection') // 게시판 섹션
+      boardSection: document.getElementById('boardSection')
     };
 
     function showSection(sectionId) {
@@ -218,8 +177,9 @@
       });
       if (sectionId === 'mapSection') {
         initMap();
-      } else if (sectionId === 'boardSection') {
-        loadBoardPosts(); // 게시판 섹션에 들어가면 게시글 로드
+      }
+      if (sectionId === 'boardSection') {
+        loadBoard();
       }
     }
 
@@ -228,52 +188,49 @@
     document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
     document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
-    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection')); // 게시판 버튼 클릭
-
-    // Map initialization
-    let map = null;
-    let roadview = null;
-
-    function initMap() {
-      if (!map) {
-        map = new naver.maps.Map('map', {
-          center: new naver.maps.LatLng(37.5665, 126.9780),
-          zoom: 12
-        });
-      }
-    }
+    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection')); // 게시판 버튼 추가
 
     // Form handlers
     document.getElementById('sellForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const data = {
-        itemType: document.getElementById('itemType').value,
-        price: parseInt(document.getElementById('price').value),
-        address: document.getElementById('address').value,
-        sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
-        type: 'sell', // 매도글로 구분
-        timestamp: Date.now()
-      };
-      await push(ref(db, '게시판'), data);
-      alert('매물이 등록되었습니다!');
-      e.target.reset();
-      showSection('homeSection');
+      try {
+        const data = {
+          type: '매도',  // 매도로 설정
+          itemType: document.getElementById('itemType').value,
+          price: parseInt(document.getElementById('price').value),
+          address: document.getElementById('address').value,
+          timestamp: Date.now()
+        };
+
+        await push(ref(db, '게시판'), data);
+        alert('매물 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      } catch (error) {
+        console.error('Error posting item:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
     });
 
     document.getElementById('buyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const data = {
-        buyType: document.getElementById('buyType').value,
-        maxPrice: parseInt(document.getElementById('maxPrice').value),
-        buyAddress: document.getElementById('buyAddress').value,
-        buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
-        type: 'buy', // 매수글로 구분
-        timestamp: Date.now()
-      };
-      await push(ref(db, '게시판'), data);
-      alert('매수 요청이 등록되었습니다!');
-      e.target.reset();
-      showSection('homeSection');
+      try {
+        const data = {
+          type: '매수',  // 매수로 설정
+          buyType: document.getElementById('buyType').value,
+          maxPrice: parseInt(document.getElementById('maxPrice').value),
+          buyAddress: document.getElementById('buyAddress').value,
+          timestamp: Date.now()
+        };
+
+        await push(ref(db, '게시판'), data);
+        alert('매수 요청이 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      } catch (error) {
+        console.error('Error posting buy request:', error);
+        alert('등록 중 오류가 발생했습니다.');
+      }
     });
 
     // Load recent listings
@@ -304,41 +261,6 @@
       });
     }
 
-    // Load posts for board with filtering
-    function loadBoardPosts() {
-      const filter = document.getElementById('postTypeFilter').value;
-      filterValue = filter;  // 필터 값을 저장
-      const boardRef = ref(db, '게시판');
-      onValue(boardRef, (snapshot) => {
-        const posts = snapshot.val();
-        const postListDiv = document.getElementById('postList');
-        postListDiv.innerHTML = '';
-document.getElementById('postTypeFilter').addEventListener('change', () => {
-  loadBoardPosts(); // 필터 변경 후 즉시 게시글 갱신
-});
-
-        if (posts) {
-          Object.entries(posts).reverse().forEach(([key, data]) => {
-            // Apply filter
-            if (filterValue === 'all' || data.type === filterValue) {
-              const postDiv = document.createElement('div');
-              const price = data.price;
-              const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
-              postDiv.classList.add('listing');
-              postDiv.innerHTML = `
-                <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
-                <p>가격: ${formattedPrice}만원</p>
-                <p>주소: ${data.address || data.buyAddress}</p>
-                <p>작성자: ${data.sellerName || data.buyerName}</p>
-                <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
-              `;
-              postListDiv.appendChild(postDiv);
-            }
-          });
-        }
-      });
-    }
-
     // Delete Listing
     function deleteListing(key) {
       const listingRef = ref(db, '게시판/' + key);
@@ -356,8 +278,6 @@ document.getElementById('postTypeFilter').addEventListener('change', () => {
     // Initialize the app
     updateRecentListings();
     showSection('homeSection');
-
-
   </script>
 
 </body>
