@@ -276,22 +276,35 @@
   });
 });
 
-    document.getElementById('buyForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = {
-        buyType: document.getElementById('buyType').value,
-        maxPrice: parseInt(document.getElementById('maxPrice').value),
-        buyAddress: document.getElementById('buyAddress').value,
-        buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
-        content: document.getElementById('BuyContent').value, // 2025.01.30 21:10 수정: 내용 추가 저장
-        type: 'buy', // 매수글로 구분
-        timestamp: Date.now()
-      };
-      await push(ref(db, '게시판'), data);
-      alert('매수 요청이 등록되었습니다!');
-      e.target.reset();
-      showSection('homeSection');
-    });
+    document.addEventListener("DOMContentLoaded", () => { 
+  document.getElementById('buyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const buyContentElement = document.getElementById('BuyContent');
+    
+    if (!buyContentElement) {  // ✅ 요소가 없을 경우 오류 방지
+      console.error('BuyContent 요소를 찾을 수 없습니다.');
+      alert('오류 발생: 내용을 입력할 수 없습니다.');
+      return;
+    }
+
+    const data = {
+      buyType: document.getElementById('buyType').value,
+      maxPrice: parseInt(document.getElementById('maxPrice').value),
+      buyAddress: document.getElementById('buyAddress').value,
+      buyerName: document.getElementById('buyerName').value,
+      content: buyContentElement.value, // ✅ 안전하게 가져오기
+      type: 'buy',
+      timestamp: Date.now()
+    };
+
+    await push(ref(db, '게시판'), data);
+    alert('매수 물건이 등록되었습니다!');
+    e.target.reset();
+    showSection('homeSection');
+  });
+});
+
 
     // Load recent listings for home
     function updateRecentListings() {
