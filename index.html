@@ -247,22 +247,34 @@
     }
 
     // Form handlers
-    document.getElementById('sellForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = {
-        itemType: document.getElementById('itemType').value,
-        price: parseInt(document.getElementById('price').value),
-        address: document.getElementById('address').value,
-        sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
-        content: document.getElementById('SellContent').value, // 2025.01.30 21:10 수정: 내용 추가 저장
-        type: 'sell', // 매도글로 구분
-        timestamp: Date.now()
-      };
-      await push(ref(db, '게시판'), data);
-      alert('매물이 등록되었습니다!');
-      e.target.reset();
-      showSection('homeSection');
-    });
+    document.addEventListener("DOMContentLoaded", () => { 
+  document.getElementById('sellForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const sellContentElement = document.getElementById('sellContent');
+    
+    if (!sellContentElement) {  // ✅ 요소가 없을 경우 오류 방지
+      console.error('sellContent 요소를 찾을 수 없습니다.');
+      alert('오류 발생: 내용을 입력할 수 없습니다.');
+      return;
+    }
+
+    const data = {
+      itemType: document.getElementById('itemType').value,
+      price: parseInt(document.getElementById('price').value),
+      address: document.getElementById('address').value,
+      sellerName: document.getElementById('sellerName').value,
+      content: sellContentElement.value, // ✅ 안전하게 가져오기
+      type: 'sell',
+      timestamp: Date.now()
+    };
+
+    await push(ref(db, '게시판'), data);
+    alert('매도 물건이 등록되었습니다!');
+    e.target.reset();
+    showSection('homeSection');
+  });
+});
 
     document.getElementById('buyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
