@@ -202,7 +202,10 @@
     const db = getDatabase(app);
 
     let filterValue = 'all';  // 필터 값을 저장할 변수
-
+    document.getElementById('postTypeFilter').addEventListener('change', (e) => {
+      filterValue = e.target.value;
+      loadBoardPosts(); // 필터 변경 시 게시글 다시 로드
+    });
     // Section management
     const sections = {
       homeSection: document.getElementById('homeSection'),
@@ -314,6 +317,7 @@
 
       if (posts) {
         Object.entries(posts).reverse().forEach(([key, data]) => {
+          if (filterValue === 'all' || data.type === filterValue) {
           const postDiv = document.createElement('div');
           postDiv.classList.add('listing');
 
@@ -337,6 +341,7 @@
           // 삭제 버튼을 맨 오른쪽에 추가
           postDiv.appendChild(deleteButton);
           postListDiv.appendChild(postDiv);
+          }
         });
       }
     });
