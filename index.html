@@ -7,12 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>부동산 커뮤니티</title>
 
-  <!-- jQuery and Naver Maps API -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
 
   <style>
-    /* Basic styles */
     body {
       margin: 0;
       padding: 20px;
@@ -53,7 +51,7 @@
       margin: 0 auto;
     }
 
-    input {
+    input, textarea {
       padding: 8px;
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -100,7 +98,6 @@
       margin: 20px 0;
     }
 
-    /* Address search styles */
     .address-search-container {
       position: relative;
       width: 100%;
@@ -154,9 +151,7 @@
 
   <section id="homeSection">
     <h2>최근 등록 매물</h2>
-    <div id="recentListings">
-      <!-- Recent listings will be populated here -->
-    </div>
+    <div id="recentListings"></div>
   </section>
 
   <section id="sellSection" style="display: none;">
@@ -226,17 +221,13 @@
         <option value="buy">매수</option>
       </select>
     </div>
-    <div id="postList">
-      <!-- 게시글 목록 -->
-    </div>
+    <div id="postList"></div>
   </section>
 
-  <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getDatabase, ref, push, onValue, remove,get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+    import { getDatabase, ref, push, onValue, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
       authDomain: "real-estate-app-7a001.firebaseapp.com",
@@ -247,18 +238,10 @@
       appId: "1:229808061189:web:fa083511b468b44e3556c"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    let markers = []; // For storing map markers
-
-    window.db = db;  // Make db accessible globally
-
-    let filterValue = 'all';
-    document.getElementById('postTypeFilter').addEventListener('change', (e) => {
-      filterValue = e.target.value;
-      loadBoardPosts();
-    });
+    let map = null;
+    let markers = [];
 
     const sections = {
       homeSection: document.getElementById('homeSection'),
@@ -272,11 +255,8 @@
       Object.entries(sections).forEach(([id, element]) => {
         element.style.display = id === sectionId ? 'block' : 'none';
       });
-      if (sectionId === 'mapSection') {
-        initMap();
-      } else if (sectionId === 'boardSection') {
-        loadBoardPosts();
-      }
+      if (sectionId === 'mapSection') initMap();
+      else if (sectionId === 'boardSection') loadBoardPosts();
     }
 
     document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
@@ -285,9 +265,7 @@
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
     document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection'));
 
-    let map = null;
-    let roadview = null;
-
+    // Map Functions
     function initMap() {
       if (!map) {
         map = new naver.maps.Map('map', {
@@ -295,10 +273,10 @@
           zoom: 12
         });
       }
-      loadMapData(); // Load markers when map initializes
+      loadMapData();
     }
+
     async function loadMapData() {
-      // Clear existing markers
       markers.forEach(marker => marker.setMap(null));
       markers = [];
 
@@ -312,9 +290,7 @@
         const address = post.type === 'sell' ? post.address : post.buyAddress;
         if (!address) return;
 
-        naver.maps.Service.geocode({
-          query: address
-        }, (status, response) => {
+        naver.maps.Service.geocode({ query: address }, (status, response) => {
           if (status !== naver.maps.Service.Status.OK) return;
 
           const result = response.v2;
@@ -327,215 +303,141 @@
             position: latLng,
             map: map,
             icon: {
-              content: `
-                <div style="
-                  background: ${post.type === 'sell' ? '#ff0000' : '#0000ff'};
-                  color: white;
-                  padding: 5px;
-                  border-radius: 4px;
-                  font-size: 12px;
-                ">
-                  ${post.type === 'sell' ? '매도' : '매수'}
-                </div>
-              `,
+              content: `<div style="background:${post.type === 'sell' ? '#ff0000' : '#0000ff'};color:white;padding:5px;border-radius:4px;font-size:12px;">
+                ${post.type === 'sell' ? '매도' : '매수'}
+              </div>`,
               size: new naver.maps.Size(38, 38),
               anchor: new naver.maps.Point(19, 38)
             }
           });
 
-          // Add info window
           const infoWindow = new naver.maps.InfoWindow({
-            content: `
-              <div style="padding:10px;min-width:200px;">
-                <h3 style="margin:0 0 5px 0;">${post.itemType || post.buyType}</h3>
-                <p style="margin:0;">유형: ${post.type === 'sell' ? '매도' : '매수'}</p>
-                <p style="margin:0;">가격: ${post.price || post.maxPrice}만원</p>
-                <p style="margin:0;">주소: ${address}</p>
-                <p style="margin:0;">작성자: ${post.sellerName || post.buyerName}</p>
-              </div>
-            `
+            content: `<div style="padding:10px;min-width:200px;">
+              <h3 style="margin:0 0 5px 0;">${post.itemType || post.buyType}</h3>
+              <p style="margin:0;">유형: ${post.type === 'sell' ? '매도' : '매수'}</p>
+              <p style="margin:0;">가격: ${post.price || post.maxPrice}만원</p>
+              <p style="margin:0;">주소: ${address}</p>
+              <p style="margin:0;">작성자: ${post.sellerName || post.buyerName}</p>
+            </div>`
           });
 
-          naver.maps.Event.addListener(marker, 'click', () => {
-            infoWindow.open(map, marker);
-          });
-
+          naver.maps.Event.addListener(marker, 'click', () => infoWindow.open(map, marker));
           markers.push(marker);
         });
       });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById('sellForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const sellContentElement = document.getElementById('sellContent');
-        
-        if (!sellContentElement) {
-          console.error('sellContent 요소를 찾을 수 없습니다.');
-          alert('오류 발생: 내용을 입력할 수 없습니다.');
-          return;
-        }
-
-        const data = {
-          itemType: document.getElementById('itemType').value,
-          price: parseInt(document.getElementById('price').value),
-          address: document.getElementById('address').value,
-          sellerName: document.getElementById('sellerName').value,
-          content: sellContentElement.value,
-          type: 'sell',
-          timestamp: Date.now()
-        };
-
-        await push(ref(db, '게시판'), data);
-        alert('매도 물건이 등록되었습니다!');
-        e.target.reset();
-        showSection('homeSection');
+    // Form Handlers
+    document.getElementById('sellForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await push(ref(db, '게시판'), {
+        itemType: document.getElementById('itemType').value,
+        price: parseInt(document.getElementById('price').value),
+        address: document.getElementById('address').value,
+        sellerName: document.getElementById('sellerName').value,
+        content: document.getElementById('sellContent').value,
+        type: 'sell',
+        timestamp: Date.now()
       });
-
-      document.getElementById('buyForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const buyContentElement = document.getElementById('BuyContent');
-        
-        if (!buyContentElement) {
-          console.error('BuyContent 요소를 찾을 수 없습니다.');
-          alert('오류 발생: 내용을 입력할 수 없습니다.');
-          return;
-        }
-
-        const data = {
-          buyType: document.getElementById('buyType').value,
-          maxPrice: parseInt(document.getElementById('maxPrice').value),
-          buyAddress: document.getElementById('buyAddress').value,
-          buyerName: document.getElementById('buyerName').value,
-          content: buyContentElement.value,
-          type: 'buy',
-          timestamp: Date.now()
-        };
-
-        await push(ref(db, '게시판'), data);
-        alert('매수 물건이 등록되었습니다!');
-        e.target.reset();
-        showSection('homeSection');
-      });
+      alert('매도 물건이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
     });
 
-    function updateRecentListings() {
-      const listingsRef = ref(db, '게시판');
-      onValue(listingsRef, (snapshot) => {
-        const posts = snapshot.val();
-        const recentListingsDiv = document.getElementById('recentListings');
-        recentListingsDiv.innerHTML = '';
-
-        if (posts) {
-          Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
-            const listingDiv = document.createElement('div');
-            const price = data.price;
-            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
-            listingDiv.classList.add('listing');
-            listingDiv.innerHTML = `
-              <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
-              <p>가격: ${formattedPrice}만원</p>
-              <p>주소: ${data.address || data.buyAddress}</p>
-              <p>작성자: ${data.sellerName || data.buyerName}</p>
-              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
-            `;
-            recentListingsDiv.appendChild(listingDiv);
-          });
-        }
+    document.getElementById('buyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await push(ref(db, '게시판'), {
+        buyType: document.getElementById('buyType').value,
+        maxPrice: parseInt(document.getElementById('maxPrice').value),
+        buyAddress: document.getElementById('buyAddress').value,
+        buyerName: document.getElementById('buyerName').value,
+        content: document.getElementById('BuyContent').value,
+        type: 'buy',
+        timestamp: Date.now()
       });
-    }
+      alert('매수 물건이 등록되었습니다!');
+      e.target.reset();
+      showSection('homeSection');
+    });
+
+    // Board Functions
+    let filterValue = 'all';
+    document.getElementById('postTypeFilter').addEventListener('change', (e) => {
+      filterValue = e.target.value;
+      loadBoardPosts();
+    });
 
     function loadBoardPosts() {
-      const boardRef = ref(db, '게시판');
       const postListDiv = document.getElementById('postList');
       postListDiv.innerHTML = '';
 
-      onValue(boardRef, (snapshot) => {
+      onValue(ref(db, '게시판'), (snapshot) => {
         const posts = snapshot.val();
+        if (!posts) return;
 
-        if (posts) {
-          Object.entries(posts).reverse().forEach(([key, data]) => {
-            if (filterValue === 'all' || data.type === filterValue) {
-              const postDiv = document.createElement('div');
-              postDiv.classList.add('listing');
+        Object.entries(posts).reverse().forEach(([key, data]) => {
+          if (filterValue !== 'all' && data.type !== filterValue) return;
 
-              const deleteButton = document.createElement('button');
-              deleteButton.classList.add('delete-btn');
-              deleteButton.textContent = '삭제';
-              deleteButton.onclick = () => deletePost(key);
+          const postDiv = document.createElement('div');
+          postDiv.className = 'listing';
+          postDiv.innerHTML = `
+            <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+            <p>가격: ${data.price || data.maxPrice}만원</p>
+            <p>주소: ${data.address || data.buyAddress}</p>
+            <p>내용: ${data.content?.slice(0, 50) || ''}...</p>
+            <p>작성자: ${data.sellerName || data.buyerName}</p>
+          `;
 
-              const price = data.price || data.maxPrice || 'N/A';
-              const shortContent = data.content ? data.content.slice(0, 50) + '...' : '내용 없음';
-              postDiv.innerHTML = `
-                <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
-                <p>가격: ${price}만원</p>
-               <p>주소: ${data.address || data.buyAddress}</p>
-                <p>내용: ${shortContent}</p>
-                <p>작성자: ${data.sellerName || data.buyerName}</p>
-              `;
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.textContent = '삭제';
+          deleteBtn.onclick = () => deletePost(key);
+          postDiv.appendChild(deleteBtn);
 
-              postDiv.appendChild(deleteButton);
-              postListDiv.appendChild(postDiv);
-            }
-          });
-        }
+          postListDiv.appendChild(postDiv);
+        });
       });
     }
 
-    window.deletePost = function(postKey) {
-      const postRef = ref(db, `게시판/${postKey}`);
+    window.deletePost = (postKey) => {
       if (confirm('정말 삭제하시겠습니까?')) {
-        remove(postRef)
-          .then(() => {
-            alert('게시글이 삭제되었습니다.');
-            loadBoardPosts();
-          })
-          .catch((error) => {
-            console.error('삭제 중 오류 발생:', error);
-            alert('삭제 중 오류가 발생했습니다.');
-          });
+        remove(ref(db, `게시판/${postKey}`))
+          .then(() => alert('게시글이 삭제되었습니다.'))
+          .catch(error => console.error('삭제 오류:', error));
       }
     }
 
     // Initialize
     loadBoardPosts();
-    updateRecentListings();
+    onValue(ref(db, '게시판'), () => {
+      document.getElementById('recentListings').innerHTML = '';
+      loadBoardPosts();
+    });
   </script>
 
-  <!-- Address Search Script -->
   <script>
     function searchAddress(inputId) {
-      let keyword = document.getElementById(inputId).value;
-      if (!keyword) {
-        alert("주소를 입력하세요.");
-        return;
-      }
-
-      let apiKey = "U01TX0FVVEgyMDI1MDEzMDIyMDExMDExNTQzNDc=";
-      let apiUrl = `https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do?confmKey=${apiKey}&currentPage=1&countPerPage=50&keyword=${encodeURIComponent(keyword)}&resultType=json`;
+      const keyword = document.getElementById(inputId).value;
+      if (!keyword) return alert("주소를 입력하세요.");
 
       $.ajax({
-        url: apiUrl,
+        url: `https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do?confmKey=U01TX0FVVEgyMDI1MDEzMDIyMDExMDExNTQzNDc=&currentPage=1&countPerPage=50&keyword=${encodeURIComponent(keyword)}&resultType=json`,
         type: "GET",
         dataType: "jsonp",
-        crossDomain: true,
-        success: function(response) {
-          let result = response.results;
-          let listDiv = document.getElementById(inputId + "-list");
-          listDiv.innerHTML = "";
+        success: (response) => {
+          const listDiv = document.getElementById(`${inputId}-list`);
+          listDiv.innerHTML = '';
 
-          if (result.common.totalCount === "0") {
+          if (response.results.common.totalCount === "0") {
             listDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
             return;
           }
 
-          let ul = document.createElement("ul");
-          result.juso.forEach(addr => {
-            let li = document.createElement("li");
+          const ul = document.createElement("ul");
+          response.results.juso.forEach(addr => {
+            const li = document.createElement("li");
             li.textContent = addr.roadAddr;
-            li.onclick = function() {
+            li.onclick = () => {
               document.getElementById(inputId).value = addr.roadAddr;
               listDiv.innerHTML = "";
             };
@@ -543,9 +445,7 @@
           });
           listDiv.appendChild(ul);
         },
-        error: function() {
-          alert("주소 검색 중 오류가 발생했습니다.");
-        }
+        error: () => alert("주소 검색 중 오류가 발생했습니다.")
       });
     }
   </script>
