@@ -1,165 +1,104 @@
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-  import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
-  import $ from 'https://code.jquery.com/jquery-3.6.0.min.js';
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
-    authDomain: "real-estate-app-7a001.firebaseapp.com",
-    databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "real-estate-app-7a001",
-    storageBucket: "real-estate-app-7a001.appspot.com",
-    messagingSenderId: "229808061189",
-    appId: "1:229808061189:web:fa083511b468b44e3556c"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  let filterValue = 'all';
-
-  document.getElementById('postTypeFilter').addEventListener('change', (e) => {
-    filterValue = e.target.value;
-    loadBoardPosts();
-  });
-
-  // 🔹 주소 검색 기능 추가 (매도, 매수 공통 사용)
-  function searchAddress(inputId, resultId) {
-    let keyword = document.getElementById(inputId).value;
-    if (!keyword) {
-      alert("주소를 입력하세요.");
-      return;
-    }
-
-    let apiKey = "U01TX0FVVEgyMDI1MDEzMDIyMDExMDExNTQzNDc=";
-    let apiUrl = `https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do?confmKey=${apiKey}&currentPage=1&countPerPage=5&keyword=${encodeURIComponent(keyword)}&resultType=json`;
-
-    $.ajax({
-      url: apiUrl,
-      type: "GET",
-      dataType: "jsonp",
-      crossDomain: true,
-      success: function (response) {
-        let result = response.results;
-        let listDiv = document.getElementById(resultId);
-        listDiv.innerHTML = "";
-
-        if (result.common.totalCount === "0") {
-          listDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
-          return;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부동산 커뮤니티</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        header { text-align: center; margin-bottom: 20px; }
+        #navbar { display: flex; justify-content: space-around; padding: 10px; background-color: #f0f0f0; }
+        button { padding: 10px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        form { display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin: 0 auto; }
+        input, textarea { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        #map { width: 100%; height: 400px; margin-top: 20px; border: 1px solid #ddd; }
+        .listing { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .delete-btn { background-color: red; color: white; border: none; padding: 5px; cursor: pointer; }
+        .delete-btn:hover { background-color: darkred; }
+    </style>
+</head>
+<body>
+    <header><h1>부동산 매도,매수 등록</h1></header>
+    <div id="navbar">
+        <button id="homeBtn">🏠 홈</button>
+        <button id="mapBtn">🗺️ 지도</button>
+        <button id="sellBtn">🏢 매도</button>
+        <button id="buyBtn">🔍 매수</button>
+        <button id="boardBtn">📋 게시판</button>
+    </div>
+    
+    <section id="sellSection" style="display: none;">
+        <h2>매도 등록</h2>
+        <form id="sellForm">
+            <label>종류: <input type="text" id="itemType" required></label>
+            <label>매도가격 (만원): <input type="number" id="price" required></label>
+            <label>주소: <input type="text" id="addressSell" placeholder="도로명 주소 입력" required>
+                <button type="button" onclick="searchAddress('sell')">주소 검색</button></label>
+            <div id="address-list-sell"></div>
+            <label>내용: <textarea id="sellContent" required></textarea></label>
+            <button type="submit">등록하기</button>
+        </form>
+    </section>
+    
+    <section id="buySection" style="display: none;">
+        <h2>매수 등록</h2>
+        <form id="buyForm">
+            <label>종류: <input type="text" id="buyType" required></label>
+            <label>매수가격 (만원): <input type="number" id="maxPrice" required></label>
+            <label>주소: <input type="text" id="addressBuy" placeholder="도로명 주소 입력" required>
+                <button type="button" onclick="searchAddress('buy')">주소 검색</button></label>
+            <div id="address-list-buy"></div>
+            <label>내용: <textarea id="buyContent" required></textarea></label>
+            <button type="submit">등록하기</button>
+        </form>
+    </section>
+    
+    <section id="boardSection" style="display: none;">
+        <h2>게시판</h2>
+        <div id="postList"></div>
+    </section>
+    
+    <script>
+        function searchAddress(type) {
+            let inputId = type === 'sell' ? 'addressSell' : 'addressBuy';
+            let listId = type === 'sell' ? 'address-list-sell' : 'address-list-buy';
+            let keyword = document.getElementById(inputId).value;
+            if (!keyword) { alert("주소를 입력하세요."); return; }
+            let apiKey = "U01TX0FVVEgyMDI1MDEzMDIyMDExMDExNTQzNDc=";
+            let apiUrl = `https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do?confmKey=${apiKey}&currentPage=1&countPerPage=50&keyword=${encodeURIComponent(keyword)}&resultType=json`;
+            $.ajax({
+                url: apiUrl,
+                type: "GET",
+                dataType: "jsonp",
+                crossDomain: true,
+                success: function (response) {
+                    let result = response.results;
+                    let listDiv = document.getElementById(listId);
+                    listDiv.innerHTML = "";
+                    if (result.common.totalCount === "0") {
+                        listDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
+                        return;
+                    }
+                    let ul = document.createElement("ul");
+                    result.juso.forEach(addr => {
+                        let li = document.createElement("li");
+                        li.textContent = addr.roadAddr;
+                        li.onclick = function () {
+                            document.getElementById(inputId).value = addr.roadAddr;
+                            listDiv.innerHTML = "";
+                        };
+                        ul.appendChild(li);
+                    });
+                    listDiv.appendChild(ul);
+                },
+                error: function () { alert("주소 검색 중 오류가 발생했습니다."); }
+            });
         }
-
-        let ul = document.createElement("ul");
-        result.juso.forEach(addr => {
-          let li = document.createElement("li");
-          li.textContent = addr.roadAddr;
-          li.onclick = function () {
-            document.getElementById(inputId).value = addr.roadAddr;
-            listDiv.innerHTML = "";
-          };
-          ul.appendChild(li);
-        });
-        listDiv.appendChild(ul);
-      },
-      error: function () {
-        alert("주소 검색 중 오류가 발생했습니다.");
-      }
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('sellForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const sellContentElement = document.getElementById('sellContent');
-      if (!sellContentElement) {
-        console.error('sellContent 요소를 찾을 수 없습니다.');
-        alert('오류 발생: 내용을 입력할 수 없습니다.');
-        return;
-      }
-
-      const data = {
-        itemType: document.getElementById('itemType').value,
-        price: parseInt(document.getElementById('price').value),
-        address: document.getElementById('address').value,
-        sellerName: document.getElementById('sellerName').value,
-        content: sellContentElement.value,
-        type: 'sell',
-        timestamp: Date.now()
-      };
-      await push(ref(db, '게시판'), data);
-      alert('매도 물건이 등록되었습니다!');
-      e.target.reset();
-    });
-  });
-
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('buyForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const buyContentElement = document.getElementById('BuyContent');
-      if (!buyContentElement) {
-        console.error('BuyContent 요소를 찾을 수 없습니다.');
-        alert('오류 발생: 내용을 입력할 수 없습니다.');
-        return;
-      }
-
-      const data = {
-        buyType: document.getElementById('buyType').value,
-        maxPrice: parseInt(document.getElementById('maxPrice').value),
-        buyAddress: document.getElementById('buyAddress').value,
-        buyerName: document.getElementById('buyerName').value,
-        content: buyContentElement.value,
-        type: 'buy',
-        timestamp: Date.now()
-      };
-      await push(ref(db, '게시판'), data);
-      alert('매수 물건이 등록되었습니다!');
-      e.target.reset();
-    });
-  });
-</script>
-
-<!-- 매도 등록 -->
-<section id="sellSection" style="display: none;">
-  <h2>매도 등록</h2>
-  <form id="sellForm">
-    <label for="itemType">종류:</label>
-    <input type="text" id="itemType" placeholder="예: 아파트" required>
-
-    <label for="price">매도가격 (만원):</label>
-    <input type="number" id="price" placeholder="예: 50000" required>
-
-    <label for="address">주소:</label>
-    <input type="text" id="address" placeholder="도로명 주소 입력" required>
-    <button type="button" onclick="searchAddress('address', 'sellAddressList')">주소 검색</button>
-    <div id="sellAddressList"></div>
-
-    <label for="sellerName">작성자 이름:</label>
-    <input type="text" id="sellerName" placeholder="작성자 이름" required>
-
-    <label>내용: <textarea id="sellContent" maxlength="1000" required></textarea></label>
-    <button type="submit">등록하기</button>
-  </form>
-</section>
-
-<!-- 매수 등록 -->
-<section id="buySection" style="display: none;">
-  <h2>매수 등록</h2>
-  <form id="buyForm">
-    <label for="buyType">종류:</label>
-    <input type="text" id="buyType" placeholder="예: 아파트" required>
-
-    <label for="maxPrice">매수가격 (만원):</label>
-    <input type="number" id="maxPrice" placeholder="예: 50000" required>
-
-    <label for="buyAddress">주소:</label>
-    <input type="text" id="buyAddress" placeholder="도로명 주소 입력" required>
-    <button type="button" onclick="searchAddress('buyAddress', 'buyAddressList')">주소 검색</button>
-    <div id="buyAddressList"></div>
-
-    <label for="buyerName">작성자 이름:</label>
-    <input type="text" id="buyerName" placeholder="작성자 이름" required>
-
-    <label>내용: <textarea id="BuyContent" maxlength="1000" required></textarea></label>
-    <button type="submit">등록하기</button>
-  </form>
-</section>
+    </script>
+</body>
+</html>
