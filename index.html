@@ -5,7 +5,7 @@
   <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>부동산 PWA</title>
+  <title>부동산 커뮤니티</title>
 
   <!-- Naver Maps API Script -->
   <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
@@ -104,13 +104,13 @@
 
 <body>
   <header>
-    <h1>부동산 매물 및 매수자 등록</h1>
+    <h1>부동산 매도,매수 등록</h1>
   </header>
 
   <div id="navbar">
     <button id="homeBtn">🏠<br>홈</button>
     <button id="mapBtn">🗺️<br>지도</button>
-    <button id="sellBtn">🏢<br>매물</button>
+    <button id="sellBtn">🏢<br>매도</button>
     <button id="buyBtn">🔍<br>매수</button>
     <button id="boardBtn">📋<br>게시판</button> <!-- 게시판 버튼 추가 -->
   </div>
@@ -123,12 +123,12 @@
   </section>
 
   <section id="sellSection" style="display: none;">
-    <h2>매물 등록</h2>
+    <h2>매도 등록</h2>
     <form id="sellForm">
       <label for="itemType">종류:</label>
       <input type="text" id="itemType" placeholder="예: 아파트" required>
 
-      <label for="price">가격 (만원):</label>
+      <label for="price">매도가격 (만원):</label>
       <input type="number" id="price" placeholder="예: 50000" required>
 
       <label for="address">주소:</label>
@@ -144,7 +144,7 @@
   <section id="buySection" style="display: none;">
     <h2>매수 등록</h2>
     <form id="buyForm">
-      <label for="buyType">찾는 매물 종류:</label>
+      <label for="buyType">종류:</label>
       <input type="text" id="buyType" placeholder="예: 아파트" required>
 
       <label for="maxPrice">매수가격 (만원):</label>
@@ -254,6 +254,7 @@
         price: parseInt(document.getElementById('price').value),
         address: document.getElementById('address').value,
         sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
+        content: document.getElementById('content').value, // 2025.01.30 21:10 수정: 내용 추가 저장
         type: 'sell', // 매도글로 구분
         timestamp: Date.now()
       };
@@ -270,6 +271,7 @@
         maxPrice: parseInt(document.getElementById('maxPrice').value),
         buyAddress: document.getElementById('buyAddress').value,
         buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
+        content: document.getElementById('content').value, // 2025.01.30 21:10 수정: 내용 추가 저장
         type: 'buy', // 매수글로 구분
         timestamp: Date.now()
       };
