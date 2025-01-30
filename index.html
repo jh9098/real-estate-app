@@ -132,10 +132,10 @@
       <input type="number" id="price" placeholder="예: 50000" required>
 
       <label for="address">주소:</label>
-      <input type="text" id="address" placeholder="예: 서울시 종로구 새문안로 68" required oninput="searchAddress('address', 'address-list')">
-      <div id="address-list"></div> <!-- 자동완성 목록 표시 -->
-      
-      <label for="sellerName">작성자 이름:</label>
+      <input type="text" id="address" placeholder="도로명 주소 입력" required>
+      <button type="button" onclick="searchAddress('address', 'sellAddressList')">주소 검색</button>
+      <div id="sellAddressList"></div>
+        <label for="sellerName">작성자 이름:</label>
       <input type="text" id="sellerName" placeholder="작성자 이름" required>
 <label>내용: <textarea id="sellContent" maxlength="1000" required></textarea></label>
       <button type="submit">등록하기</button>
@@ -152,10 +152,10 @@
       <input type="number" id="maxPrice" placeholder="예: 50000" required>
 
       <label for="buyAddress">주소:</label>
-      <input type="text" id="buyAddress" placeholder="예: 서울시 종로구 새문안로68" required oninput="searchAddress('buyAddress', 'buyAddress-list')">
-      <div id="buyAddress-list"></div> <!-- 자동완성 목록 표시 -->
-      
-      <label for="buyerName">작성자 이름:</label>
+      <input type="text" id="buyAddress" placeholder="도로명 주소 입력" required>
+      <button type="button" onclick="searchAddress('buyAddress', 'buyAddressList')">주소 검색</button>
+      <div id="buyAddressList"></div>
+        <label for="buyerName">작성자 이름:</label>
       <input type="text" id="buyerName" placeholder="작성자 이름" required>
 <label>내용: <textarea id="BuyContent" maxlength="1000" required></textarea></label>
       <button type="submit">등록하기</button>
@@ -166,7 +166,6 @@
     <div id="map"></div>
     <div id="roadview"></div> <!-- 로드뷰를 위한 공간 -->
   </section>
-
 
   <!-- 게시판 Section 추가 -->
   <section id="boardSection" style="display: none;">
@@ -183,56 +182,12 @@
       <!-- 게시글 목록 -->
     </div>
   </section>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const API_KEY = "U01TX0FVVEgyMDI1MDEzMDIyMDExMDExNTQzNDc=";
-  
-      function searchAddress(inputId, listId) {
-        let keyword = document.getElementById(inputId).value;
-        if (!keyword) return;
-  
-        let apiUrl = `https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do?confmKey=${API_KEY}&currentPage=1&countPerPage=5&keyword=${encodeURIComponent(keyword)}&resultType=json`;
-  
-        $.ajax({
-          url: apiUrl,
-          type: "GET",
-          dataType: "jsonp",
-          success: function (response) {
-            let result = response.results;
-            let listDiv = document.getElementById(listId);
-            listDiv.innerHTML = "";
-  
-            if (result.common.totalCount === "0") {
-              listDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
-              return;
-            }
-  
-            let ul = document.createElement("ul");
-            result.juso.forEach((addr) => {
-              let li = document.createElement("li");
-              li.textContent = addr.roadAddr;
-              li.onclick = function () {
-                document.getElementById(inputId).value = addr.roadAddr;
-                listDiv.innerHTML = "";
-              };
-              ul.appendChild(li);
-            });
-            listDiv.appendChild(ul);
-          },
-          error: function () {
-            alert("주소 검색 중 오류가 발생했습니다.");
-          },
-        });
-      }
-      window.searchAddress = searchAddress; // 함수가 전역에서 접근 가능하도록 설정
-    });
-  </script>
-  
+
   <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
     import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
-
+    import $ from 'https://code.jquery.com/jquery-3.6.0.min.js';
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
@@ -253,6 +208,48 @@
       filterValue = e.target.value;
       loadBoardPosts(); // 필터 변경 시 게시글 다시 로드
     });
+    function searchAddress(inputId, resultId) {
+      let keyword = document.getElementById(inputId).value;
+      if (!keyword) {
+        alert("주소를 입력하세요.");
+        return;
+      }
+  
+      let apiKey = "U01TX0FVVEgyMDI1MDEzMDIyMDExMDExNTQzNDc=";
+      let apiUrl = `https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do?confmKey=${apiKey}&currentPage=1&countPerPage=5&keyword=${encodeURIComponent(keyword)}&resultType=json`;
+  
+      $.ajax({
+        url: apiUrl,
+        type: "GET",
+        dataType: "jsonp",
+        crossDomain: true,
+        success: function (response) {
+          let result = response.results;
+          let listDiv = document.getElementById(resultId);
+          listDiv.innerHTML = "";
+  
+          if (result.common.totalCount === "0") {
+            listDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
+            return;
+          }
+  
+          let ul = document.createElement("ul");
+          result.juso.forEach(addr => {
+            let li = document.createElement("li");
+            li.textContent = addr.roadAddr;
+            li.onclick = function () {
+              document.getElementById(inputId).value = addr.roadAddr;
+              listDiv.innerHTML = "";
+            };
+            ul.appendChild(li);
+          });
+          listDiv.appendChild(ul);
+        },
+        error: function () {
+          alert("주소 검색 중 오류가 발생했습니다.");
+        }
+      });
+    }
     // Section management
     const sections = {
       homeSection: document.getElementById('homeSection'),
