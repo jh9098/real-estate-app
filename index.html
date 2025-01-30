@@ -9,210 +9,493 @@
 
   <!-- jQuery and Naver Maps API -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6&submodules=geocoder"></script>
+  <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7k5yxwvvj6"></script>
 
   <style>
-    /* Previous styles remain the same */
-    /* ... (keep all existing styles) ... */
-    
-    /* Add new styles for markers */
-    .marker-info {
+    /* Basic styles */
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #navbar {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
       padding: 10px;
+      background-color: #f0f0f0;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    #roadview {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+
+    .listing {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+
+    .delete-btn {
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background-color: darkred;
+    }
+
+    .filter-section {
+      margin: 20px 0;
+    }
+
+    /* Address search styles */
+    .address-search-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .address-list {
+      position: absolute;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
       background: white;
       border: 1px solid #ddd;
       border-radius: 4px;
-      max-width: 250px;
+      z-index: 1000;
     }
-    
-    .marker-info h4 {
-      margin: 0 0 5px 0;
+
+    .address-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
     }
-    
-    .marker-info p {
-      margin: 3px 0;
+
+    .address-list li {
+      padding: 8px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
     }
-    
-    .sell-marker {
-      background: #ff4444;
+
+    .address-list li:hover {
+      background-color: #f5f5f5;
     }
-    
-    .buy-marker {
-      background: #4444ff;
+
+    .search-btn {
+      margin-top: 5px;
     }
   </style>
 </head>
 
 <body>
-  <!-- Previous HTML structure remains the same until mapSection -->
-  
+  <header>
+    <h1>부동산 매도,매수 등록</h1>
+  </header>
+
+  <div id="navbar">
+    <button id="homeBtn">🏠<br>홈</button>
+    <button id="mapBtn">🗺️<br>지도</button>
+    <button id="sellBtn">🏢<br>매도</button>
+    <button id="buyBtn">🔍<br>매수</button>
+    <button id="boardBtn">📋<br>게시판</button>
+  </div>
+
+  <section id="homeSection">
+    <h2>최근 등록 매물</h2>
+    <div id="recentListings">
+      <!-- Recent listings will be populated here -->
+    </div>
+  </section>
+
+  <section id="sellSection" style="display: none;">
+    <h2>매도 등록</h2>
+    <form id="sellForm">
+      <label for="itemType">종류:</label>
+      <input type="text" id="itemType" placeholder="예: 아파트" required>
+
+      <label for="price">매도가격 (만원):</label>
+      <input type="number" id="price" placeholder="예: 50000" required>
+
+      <label for="address">주소:</label>
+      <div class="address-search-container">
+        <input type="text" id="address" placeholder="도로명 주소 입력" required>
+        <button type="button" class="search-btn" onclick="searchAddress('address')">주소 검색</button>
+        <div id="address-list" class="address-list"></div>
+      </div>
+
+      <label for="sellerName">작성자 이름:</label>
+      <input type="text" id="sellerName" placeholder="작성자 이름" required>
+
+      <label>내용:</label>
+      <textarea id="sellContent" maxlength="1000" required></textarea>
+
+      <button type="submit">등록하기</button>
+    </form>
+  </section>
+
+  <section id="buySection" style="display: none;">
+    <h2>매수 등록</h2>
+    <form id="buyForm">
+      <label for="buyType">종류:</label>
+      <input type="text" id="buyType" placeholder="예: 아파트" required>
+
+      <label for="maxPrice">매수가격 (만원):</label>
+      <input type="number" id="maxPrice" placeholder="예: 50000" required>
+
+      <label for="buyAddress">주소:</label>
+      <div class="address-search-container">
+        <input type="text" id="buyAddress" placeholder="도로명 주소 입력" required>
+        <button type="button" class="search-btn" onclick="searchAddress('buyAddress')">주소 검색</button>
+        <div id="buyAddress-list" class="address-list"></div>
+      </div>
+
+      <label for="buyerName">작성자 이름:</label>
+      <input type="text" id="buyerName" placeholder="작성자 이름" required>
+
+      <label>내용:</label>
+      <textarea id="BuyContent" maxlength="1000" required></textarea>
+
+      <button type="submit">등록하기</button>
+    </form>
+  </section>
+
   <section id="mapSection" style="display: none;">
+    <div id="map"></div>
+    <div id="roadview"></div>
+  </section>
+
+  <section id="boardSection" style="display: none;">
+    <h2>게시판</h2>
     <div class="filter-section">
-      <label for="mapFilter">표시할 매물:</label>
-      <select id="mapFilter">
+      <label for="postTypeFilter">매도/매수 필터:</label>
+      <select id="postTypeFilter">
         <option value="all">전체</option>
         <option value="sell">매도</option>
         <option value="buy">매수</option>
       </select>
     </div>
-    <div id="map"></div>
-    <div id="roadview"></div>
+    <div id="postList">
+      <!-- 게시글 목록 -->
+    </div>
   </section>
-
-  <!-- Keep rest of the HTML structure -->
 
   <!-- Firebase SDK (Modular) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
     import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-    // Firebase Configuration remains the same
+    // Firebase Configuration
     const firebaseConfig = {
-      // ... (keep existing config)
+      apiKey: "AIzaSyB1X2Y9K9-dQBDXQ7eVxaGKJDQc_ztdWYs",
+      authDomain: "real-estate-app-7a001.firebaseapp.com",
+      databaseURL: "https://real-estate-app-7a001-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "real-estate-app-7a001",
+      storageBucket: "real-estate-app-7a001.appspot.com",
+      messagingSenderId: "229808061189",
+      appId: "1:229808061189:web:fa083511b468b44e3556c"
     };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    window.db = db;
+    let markers = []; // For storing map markers
 
-    let map = null;
-    let markers = [];
-    let infoWindows = [];
+    window.db = db;  // Make db accessible globally
 
-    // Enhanced map initialization function
-    async function initMap() {
-      if (!map) {
-        map = new naver.maps.Map('map', {
-          center: new naver.maps.LatLng(37.5665, 126.9780),
-          zoom: 12
-        });
-        
-        // Load and display markers when map is initialized
-        await loadMarkersFromDatabase();
-        
-        // Add map filter change event listener
-        document.getElementById('mapFilter').addEventListener('change', async () => {
-          await loadMarkersFromDatabase();
-        });
-      }
-    }
+    let filterValue = 'all';
+    document.getElementById('postTypeFilter').addEventListener('change', (e) => {
+      filterValue = e.target.value;
+      loadBoardPosts();
+    });
 
-    // Function to convert address to coordinates
-    async function getCoordinates(address) {
-      return new Promise((resolve, reject) => {
-        naver.maps.Service.geocode({
-          query: address
-        }, function(status, response) {
-          if (status === naver.maps.Service.Status.ERROR) {
-            reject('주소를 찾을 수 없습니다.');
-            return;
-          }
-          
-          if (response.v2.meta.totalCount === 0) {
-            reject('주소를 찾을 수 없습니다.');
-            return;
-          }
-          
-          const item = response.v2.addresses[0];
-          resolve(new naver.maps.LatLng(item.y, item.x));
-        });
-      });
-    }
+    const sections = {
+      homeSection: document.getElementById('homeSection'),
+      sellSection: document.getElementById('sellSection'),
+      buySection: document.getElementById('buySection'),
+      mapSection: document.getElementById('mapSection'),
+      boardSection: document.getElementById('boardSection')
+    };
 
-    // Function to clear existing markers
-    function clearMarkers() {
-      markers.forEach(marker => marker.setMap(null));
-      markers = [];
-      infoWindows.forEach(info => info.close());
-      infoWindows = [];
-    }
-
-    // Function to create marker content
-    function createMarkerContent(data) {
-      const price = data.price || data.maxPrice;
-      const address = data.address || data.buyAddress;
-      const name = data.sellerName || data.buyerName;
-      const type = data.type === 'sell' ? '매도' : '매수';
-      
-      return `
-        <div class="marker-info">
-          <h4>${data.itemType || data.buyType} (${type})</h4>
-          <p>가격: ${price.toLocaleString()}만원</p>
-          <p>주소: ${address}</p>
-          <p>작성자: ${name}</p>
-        </div>
-      `;
-    }
-
-    // Enhanced function to load markers from database
-    async function loadMarkersFromDatabase() {
-      clearMarkers();
-      
-      const filterValue = document.getElementById('mapFilter').value;
-      const listingsRef = ref(db, '게시판');
-      
-      onValue(listingsRef, async (snapshot) => {
-        const posts = snapshot.val();
-        
-        if (posts) {
-          for (const [key, data] of Object.entries(posts)) {
-            if (filterValue === 'all' || data.type === filterValue) {
-              try {
-                const address = data.address || data.buyAddress;
-                const position = await getCoordinates(address);
-                
-                // Create marker
-                const marker = new naver.maps.Marker({
-                  position: position,
-                  map: map,
-                  icon: {
-                    content: `<div style="padding: 5px; background: ${data.type === 'sell' ? '#ff4444' : '#4444ff'}; color: white; border-radius: 50%;">
-                              ${data.type === 'sell' ? '매' : '구'}
-                            </div>`,
-                    anchor: new naver.maps.Point(15, 15)
-                  }
-                });
-
-                // Create info window
-                const infoWindow = new naver.maps.InfoWindow({
-                  content: createMarkerContent(data),
-                  maxWidth: 300,
-                  backgroundColor: "#fff",
-                  borderColor: "#ddd",
-                  borderWidth: 1,
-                  anchorSize: new naver.maps.Size(10, 10),
-                  anchorSkew: true,
-                  anchorColor: "#fff",
-                  pixelOffset: new naver.maps.Point(10, -10)
-                });
-
-                // Add click event to marker
-                naver.maps.Event.addListener(marker, 'click', function() {
-                  infoWindows.forEach(info => info.close());
-                  infoWindow.open(map, marker);
-                });
-
-                markers.push(marker);
-                infoWindows.push(infoWindow);
-              } catch (error) {
-                console.error(`주소 변환 실패: ${error}`);
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // Keep existing event listeners and functions
-    // ... (rest of the existing code)
-
-    // Modify showSection function to handle map initialization
     function showSection(sectionId) {
       Object.entries(sections).forEach(([id, element]) => {
         element.style.display = id === sectionId ? 'block' : 'none';
       });
       if (sectionId === 'mapSection') {
         initMap();
+      } else if (sectionId === 'boardSection') {
+        loadBoardPosts();
+      }
+    }
+
+    document.getElementById('homeBtn').addEventListener('click', () => showSection('homeSection'));
+    document.getElementById('mapBtn').addEventListener('click', () => showSection('mapSection'));
+    document.getElementById('sellBtn').addEventListener('click', () => showSection('sellSection'));
+    document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
+    document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection'));
+
+    let map = null;
+    let roadview = null;
+
+    function initMap() {
+      if (!map) {
+        map = new naver.maps.Map('map', {
+          center: new naver.maps.LatLng(37.5665, 126.9780),
+          zoom: 12
+        });
+      }
+      loadMapData(); // Load markers when map initializes
+    }
+    async function loadMapData() {
+      // Clear existing markers
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+
+      const postsRef = ref(db, '게시판');
+      const snapshot = await get(postsRef);
+      const posts = snapshot.val();
+
+      if (!posts) return;
+
+      Object.values(posts).forEach(post => {
+        const address = post.type === 'sell' ? post.address : post.buyAddress;
+        if (!address) return;
+
+        naver.maps.Service.geocode({
+          query: address
+        }, (status, response) => {
+          if (status !== naver.maps.Service.Status.OK) return;
+
+          const result = response.v2;
+          if (result.addresses.length === 0) return;
+
+          const item = result.addresses[0];
+          const latLng = new naver.maps.LatLng(item.y, item.x);
+
+          const marker = new naver.maps.Marker({
+            position: latLng,
+            map: map,
+            icon: {
+              content: `
+                <div style="
+                  background: ${post.type === 'sell' ? '#ff0000' : '#0000ff'};
+                  color: white;
+                  padding: 5px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                ">
+                  ${post.type === 'sell' ? '매도' : '매수'}
+                </div>
+              `,
+              size: new naver.maps.Size(38, 38),
+              anchor: new naver.maps.Point(19, 38)
+            }
+          });
+
+          // Add info window
+          const infoWindow = new naver.maps.InfoWindow({
+            content: `
+              <div style="padding:10px;min-width:200px;">
+                <h3 style="margin:0 0 5px 0;">${post.itemType || post.buyType}</h3>
+                <p style="margin:0;">유형: ${post.type === 'sell' ? '매도' : '매수'}</p>
+                <p style="margin:0;">가격: ${post.price || post.maxPrice}만원</p>
+                <p style="margin:0;">주소: ${address}</p>
+                <p style="margin:0;">작성자: ${post.sellerName || post.buyerName}</p>
+              </div>
+            `
+          });
+
+          naver.maps.Event.addListener(marker, 'click', () => {
+            infoWindow.open(map, marker);
+          });
+
+          markers.push(marker);
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('sellForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const sellContentElement = document.getElementById('sellContent');
+        
+        if (!sellContentElement) {
+          console.error('sellContent 요소를 찾을 수 없습니다.');
+          alert('오류 발생: 내용을 입력할 수 없습니다.');
+          return;
+        }
+
+        const data = {
+          itemType: document.getElementById('itemType').value,
+          price: parseInt(document.getElementById('price').value),
+          address: document.getElementById('address').value,
+          sellerName: document.getElementById('sellerName').value,
+          content: sellContentElement.value,
+          type: 'sell',
+          timestamp: Date.now()
+        };
+
+        await push(ref(db, '게시판'), data);
+        alert('매도 물건이 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      });
+
+      document.getElementById('buyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const buyContentElement = document.getElementById('BuyContent');
+        
+        if (!buyContentElement) {
+          console.error('BuyContent 요소를 찾을 수 없습니다.');
+          alert('오류 발생: 내용을 입력할 수 없습니다.');
+          return;
+        }
+
+        const data = {
+          buyType: document.getElementById('buyType').value,
+          maxPrice: parseInt(document.getElementById('maxPrice').value),
+          buyAddress: document.getElementById('buyAddress').value,
+          buyerName: document.getElementById('buyerName').value,
+          content: buyContentElement.value,
+          type: 'buy',
+          timestamp: Date.now()
+        };
+
+        await push(ref(db, '게시판'), data);
+        alert('매수 물건이 등록되었습니다!');
+        e.target.reset();
+        showSection('homeSection');
+      });
+    });
+
+    function updateRecentListings() {
+      const listingsRef = ref(db, '게시판');
+      onValue(listingsRef, (snapshot) => {
+        const posts = snapshot.val();
+        const recentListingsDiv = document.getElementById('recentListings');
+        recentListingsDiv.innerHTML = '';
+
+        if (posts) {
+          Object.entries(posts).reverse().slice(0, 5).forEach(([key, data]) => {
+            const listingDiv = document.createElement('div');
+            const price = data.price;
+            const formattedPrice = price !== undefined && price !== null ? price.toLocaleString() : 'N/A';
+            listingDiv.classList.add('listing');
+            listingDiv.innerHTML = `
+              <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+              <p>가격: ${formattedPrice}만원</p>
+              <p>주소: ${data.address || data.buyAddress}</p>
+              <p>작성자: ${data.sellerName || data.buyerName}</p>
+              <button class="delete-btn" onclick="deletePost('${key}')">삭제</button>
+            `;
+            recentListingsDiv.appendChild(listingDiv);
+          });
+        }
+      });
+    }
+
+    function loadBoardPosts() {
+      const boardRef = ref(db, '게시판');
+      const postListDiv = document.getElementById('postList');
+      postListDiv.innerHTML = '';
+
+      onValue(boardRef, (snapshot) => {
+        const posts = snapshot.val();
+
+        if (posts) {
+          Object.entries(posts).reverse().forEach(([key, data]) => {
+            if (filterValue === 'all' || data.type === filterValue) {
+              const postDiv = document.createElement('div');
+              postDiv.classList.add('listing');
+
+              const deleteButton = document.createElement('button');
+              deleteButton.classList.add('delete-btn');
+              deleteButton.textContent = '삭제';
+              deleteButton.onclick = () => deletePost(key);
+
+              const price = data.price || data.maxPrice || 'N/A';
+              const shortContent = data.content ? data.content.slice(0, 50) + '...' : '내용 없음';
+              postDiv.innerHTML = `
+                <h3>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</h3>
+                <p>가격: ${price}만원</p>
+               <p>주소: ${data.address || data.buyAddress}</p>
+                <p>내용: ${shortContent}</p>
+                <p>작성자: ${data.sellerName || data.buyerName}</p>
+              `;
+
+              postDiv.appendChild(deleteButton);
+              postListDiv.appendChild(postDiv);
+            }
+          });
+        }
+      });
+    }
+
+    window.deletePost = function(postKey) {
+      const postRef = ref(db, `게시판/${postKey}`);
+      if (confirm('정말 삭제하시겠습니까?')) {
+        remove(postRef)
+          .then(() => {
+            alert('게시글이 삭제되었습니다.');
+            loadBoardPosts();
+          })
+          .catch((error) => {
+            console.error('삭제 중 오류 발생:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+          });
       }
     }
 
@@ -221,6 +504,51 @@
     updateRecentListings();
   </script>
 
-  <!-- Keep the Address Search Script -->
+  <!-- Address Search Script -->
+  <script>
+    function searchAddress(inputId) {
+      let keyword = document.getElementById(inputId).value;
+      if (!keyword) {
+        alert("주소를 입력하세요.");
+        return;
+      }
+
+      let apiKey = "U01TX0FVVEgyMDI1MDEzMDIyMDExMDExNTQzNDc=";
+      let apiUrl = `https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do?confmKey=${apiKey}&currentPage=1&countPerPage=50&keyword=${encodeURIComponent(keyword)}&resultType=json`;
+
+      $.ajax({
+        url: apiUrl,
+        type: "GET",
+        dataType: "jsonp",
+        crossDomain: true,
+        success: function(response) {
+          let result = response.results;
+          let listDiv = document.getElementById(inputId + "-list");
+          listDiv.innerHTML = "";
+
+          if (result.common.totalCount === "0") {
+            listDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
+            return;
+          }
+
+          let ul = document.createElement("ul");
+          result.juso.forEach(addr => {
+            let li = document.createElement("li");
+            li.textContent = addr.roadAddr;
+            li.onclick = function() {
+              document.getElementById(inputId).value = addr.roadAddr;
+              listDiv.innerHTML = "";
+            };
+            ul.appendChild(li);
+          });
+          listDiv.appendChild(ul);
+        },
+        error: function() {
+          alert("주소 검색 중 오류가 발생했습니다.");
+        }
+      });
+    }
+  </script>
+
 </body>
 </html>
