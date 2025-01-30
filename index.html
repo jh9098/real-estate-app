@@ -136,7 +136,7 @@
 
       <label for="sellerName">작성자 이름:</label>
       <input type="text" id="sellerName" placeholder="작성자 이름" required>
-<label>내용: <textarea id="content" maxlength="1000" required></textarea></label>
+<label>내용: <textarea id="sellContent" maxlength="1000" required></textarea></label>
       <button type="submit">등록하기</button>
     </form>
   </section>
@@ -155,7 +155,7 @@
 
       <label for="buyerName">작성자 이름:</label>
       <input type="text" id="buyerName" placeholder="작성자 이름" required>
-<label>내용: <textarea id="content" maxlength="1000" required></textarea></label>
+<label>내용: <textarea id="BuyContent" maxlength="1000" required></textarea></label>
       <button type="submit">등록하기</button>
     </form>
   </section>
@@ -254,7 +254,7 @@
         price: parseInt(document.getElementById('price').value),
         address: document.getElementById('address').value,
         sellerName: document.getElementById('sellerName').value, // 작성자 이름 추가
-        content: document.getElementById('content').value, // 2025.01.30 21:10 수정: 내용 추가 저장
+        content: document.getElementById('SellContent').value, // 2025.01.30 21:10 수정: 내용 추가 저장
         type: 'sell', // 매도글로 구분
         timestamp: Date.now()
       };
@@ -271,7 +271,7 @@
         maxPrice: parseInt(document.getElementById('maxPrice').value),
         buyAddress: document.getElementById('buyAddress').value,
         buyerName: document.getElementById('buyerName').value, // 작성자 이름 추가
-        content: document.getElementById('content').value, // 2025.01.30 21:10 수정: 내용 추가 저장
+        content: document.getElementById('BuyContent').value, // 2025.01.30 21:10 수정: 내용 추가 저장
         type: 'buy', // 매수글로 구분
         timestamp: Date.now()
       };
