@@ -147,75 +147,90 @@
     document.getElementById('buyBtn').addEventListener('click', () => showSection('buySection'));
     document.getElementById('boardBtn').addEventListener('click', () => showSection('boardSection'));
     
-    function addMarkersToMap() {
-      const boardRef = ref(db, '게시판');
-      onValue(boardRef, (snapshot) => {
-        const posts = snapshot.val();
-        if (posts && map) {
-          // Clear existing markers
-          map.getPanes().overlayLayer.innerHTML = '';
+   function addMarkersToMap() {
+  const boardRef = ref(db, '게시판');
+  onValue(boardRef, (snapshot) => {
+    const posts = snapshot.val();
+    console.log('Posts from Firebase:', posts); // Debug log for posts
 
-          Object.entries(posts).forEach(([key, data]) => {
-            const address = data.address || data.buyAddress;
-            if (address) {
-              // Use Naver Geocoder to convert address to coordinates
-              naver.maps.Service.geocode({
-                query: address
-              }, function(status, response) {
-                if (status === naver.maps.Service.Status.OK) {
-                  const point = response.v2.addresses[0];
-                  
-                  // Create a marker
-                  const marker = new naver.maps.Marker({
-                    position: new naver.maps.LatLng(point.y, point.x),
-                    map: map,
-                    title: `${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})`
-                  });
+    if (posts && map) {
+      console.log('Map exists, attempting to add markers'); // Debug log for map existence
 
-                  // Create an info window
-                  const contentString = `
-                    <div style="padding:10px;">
-                      <strong>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</strong><br>
-                      가격: ${data.price || data.maxPrice}만원<br>
-                      주소: ${address}<br>
-                      작성자: ${data.sellerName || data.buyerName}
-                    </div>
-                  `;
+      Object.entries(posts).forEach(([key, data]) => {
+        const address = data.address || data.buyAddress;
+        console.log('Processing address:', address); // Debug log for each address
 
-                  const infoWindow = new naver.maps.InfoWindow({
-                    content: contentString,
-                    borderWidth: 1,
-                    borderColor: '#888',
-                    backgroundColor: '#fff'
-                  });
+        if (address) {
+          // Use Naver Geocoder to convert address to coordinates
+          naver.maps.Service.geocode({
+            query: address
+          }, function(status, response) {
+            console.log('Geocoding status:', status); // Debug log for geocoding status
+            console.log('Geocoding response:', response); // Debug log for geocoding response
 
-                  // Add click event to show info window
-                  naver.maps.Event.addListener(marker, 'click', function() {
-                    if (infoWindow.getMap()) {
-                      infoWindow.close();
-                    } else {
-                      infoWindow.open(map, marker);
-                    }
-                  });
+            if (status === naver.maps.Service.Status.OK && response.v2.addresses.length > 0) {
+              const point = response.v2.addresses[0];
+              
+              // Create a marker
+              const marker = new naver.maps.Marker({
+                position: new naver.maps.LatLng(point.y, point.x),
+                map: map,
+                title: `${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})`
+              });
+
+              // Create an info window
+              const contentString = `
+                <div style="padding:10px;">
+                  <strong>${data.itemType || data.buyType} (${data.type === 'sell' ? '매도' : '매수'})</strong><br>
+                  가격: ${data.price || data.maxPrice}만원<br>
+                  주소: ${address}<br>
+                  작성자: ${data.sellerName || data.buyerName}
+                </div>
+              `;
+
+              const infoWindow = new naver.maps.InfoWindow({
+                content: contentString,
+                borderWidth: 1,
+                borderColor: '#888',
+                backgroundColor: '#fff'
+              });
+
+              // Add click event to show info window
+              naver.maps.Event.addListener(marker, 'click', function() {
+                if (infoWindow.getMap()) {
+                  infoWindow.close();
+                } else {
+                  infoWindow.open(map, marker);
                 }
               });
+            } else {
+              console.error('Geocoding failed for address:', address);
             }
           });
+        } else {
+          console.log('No address found for post:', key);
         }
       });
+    } else {
+      console.error('Map not initialized or no posts found');
     }
+  });
+}
     
     function initMap() {
-      if (!map) {
-        map = new naver.maps.Map('map', {
-          center: new naver.maps.LatLng(37.5665, 126.9780),
-          zoom: 12
-        });
+  console.log('Initializing map'); // Debug log for map initialization
+  if (!map) {
+    map = new naver.maps.Map('map', {
+      center: new naver.maps.LatLng(37.5665, 126.9780),
+      zoom: 12
+    });
 
-        // Add markers after map is initialized
-        addMarkersToMap();
-      }
-    }
+    console.log('Map created:', map); // Debug log to confirm map creation
+
+    // Add markers after map is initialized
+    addMarkersToMap();
+  }
+}
     
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('sellForm').addEventListener('submit', async (e) => {
